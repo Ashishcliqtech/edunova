@@ -1,0 +1,30 @@
+📋 API Endpoints
+Authentication:
+
+POST /api/auth/signup - User registration
+POST /api/auth/login - User/Admin login
+GET /api/auth/me - Get current user profile
+
+User Endpoints:
+
+GET /api/user/courses - List courses (with filtering)
+GET /api/user/courses/:id - Get course details
+GET /api/user/events - List events (with filtering)
+GET /api/user/events/:id - Get event details
+
+Admin Endpoints:
+
+GET /api/admin/dashboard - Dashboard statistics
+GET /api/admin/courses - List all courses
+POST /api/admin/courses - Create course
+PUT /api/admin/courses/:id - Update course
+DELETE /api/admin/courses/:id - Delete course
+GET /api/admin/events - List all events
+POST /api/admin/events - Create event
+PUT /api/admin/events/:id - Update event
+DELETE /api/admin/events/:id - Delete event
+
+🔒 Default Admin Credentials
+
+Email: admin@company.com
+Password: Admin@123456
