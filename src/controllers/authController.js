@@ -5,6 +5,7 @@ const successResponse = require("../utils/successResponse");
 const logger = require("../utils/logger");
 const SendGridService = require("../utils/sendgrid/SendGridService");
 const crypto = require("crypto");
+const redis = require("../utils/redisClient/redisclient");
 
 const signup = catchAsync(async (req, res, next) => {
   try {
@@ -28,18 +29,27 @@ const signup = catchAsync(async (req, res, next) => {
     }
 
     const otp = generateOTP();
-    // const hashedOtp = crypto.createHash("sha256").update(otp).digest("hex");
+    const redisKey = `signup:${email.toLowerCase()}`;
 
-    const user = await User.create({
+    // Check if OTP already exists in Redis
+    const existingOtp = await redis.get(redisKey);
+    if (existingOtp) {
+      return next(
+        new AppError("Otp already sent. Please check your email.", 400)
+      );
+    }
+
+    // Prepare data to store in Redis
+    const redisData = {
       name,
       email,
       password,
       role: "user",
       otp,
-      otpExpireAt: new Date(Date.now() + 10 * 60 * 1000),
-    });
+    };
 
-    await user.save();
+    // Store OTP in Redis with a 10-minute expiration
+    await redis.set(redisKey, JSON.stringify(redisData), { ex: 600 });
 
     await SendGridService.sendOtp(name, email, otp);
 
@@ -53,34 +63,41 @@ const signup = catchAsync(async (req, res, next) => {
 const verifyOtp = catchAsync(async (req, res, next) => {
   try {
     const { email, otp } = req.body;
-    const user = await User.findOne({ email }).select("+otp");
+    const redisKey = `signup:${email.toLowerCase()}`;
+    const userData = await redis.get(redisKey);
 
-    if (!user) return next(new AppError("Not found: ", 404));
+    if (!userData)
+      return next(new AppError("Signup session expired or invalid", 400));
 
-    // const hashedOtp = crypto.createHash("sha256").update(otp).digest("hex");
+    const parsed = userData;
 
-    console.log(`user otp: ${user.otp}, Body otp: ${otp}`);
-
-    if (user.otp !== otp || user.otpExpireAt < Date.now()) {
-      return next(new AppError("Invalid or expired Otp", 400));
+    if (parsed.otp !== otp) {
+      return next(new AppError("Invalid OTP", 400));
     }
 
-    // Generate JWT
-    const token = generateToken(user._id);
+    const newUser = await User.create({
+      name: parsed.name,
+      email: parsed.email,
+      password: parsed.password,
+      role: "user",
+      isVerified: true,
+      lastLogin: new Date(),
+      isActive: true,
+    });
 
-    user.isVerified = true;
-    user.otp = undefined;
-    user.otpExpireAt = undefined;
-    user.lastLogin = new Date();
-    user.token = token;
-    user.isActive = true;
-    await user.save();
+    // Generate JWT token for the new user
+    const token = generateToken(newUser._id);
+    newUser.token = token;
+    await newUser.save();
+
+    // clean up Redis key after successful verification
+    await redis.del(redisKey);
 
     const data = {
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
+      _id: newUser._id,
+      name: newUser.name,
+      email: newUser.email,
+      role: newUser.role,
       token: token,
     };
 
@@ -93,6 +110,7 @@ const verifyOtp = catchAsync(async (req, res, next) => {
   }
 });
 
+// Send OTP to user's email for password reset or verification
 const sendOtp = catchAsync(async (req, res, next) => {
   try {
     const { email } = req.body;
@@ -145,16 +163,22 @@ const login = catchAsync(async (req, res, next) => {
     const { email, password } = req.body;
 
     const user = await User.findOne({ email }).select("+password");
+    console.log("User found:", user);
     const userId = user._id;
 
     if (!user || !(await user.comparePassword(password))) {
       return next(new AppError("Invalid email or password", 401));
     }
 
+    console.log("User found and password matched:", user);
     if (!user.isActive) {
       return next(new AppError("Account is deactivated", 401));
     }
 
+    // 🔒 Optional: Check if email is verified
+    if (!user.isVerified) {
+      return next(new AppError("Please verify your email to login.", 403));
+    }
     const token = generateToken(userId);
 
     user.lastLogin = new Date();

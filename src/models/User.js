@@ -42,13 +42,6 @@ const userSchema = new mongoose.Schema(
       type: String,
       select: false,
     },
-    otp: {
-      type: String,
-      select: false, // optional: to prevent it from being returned by default
-    },
-    otpExpireAt: {
-      type: Date,
-    },
     isVerified: {
       type: Boolean,
       default: false,
@@ -69,7 +62,6 @@ userSchema.pre("save", async function (next) {
 
 // Compare password
 userSchema.methods.comparePassword = async function (candidatePassword) {
-  const bcrypt = require("bcryptjs");
   return await bcrypt.compare(candidatePassword, this.password);
 };
 
