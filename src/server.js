@@ -78,6 +78,9 @@ app.get("/health", (req, res) => {
   });
 });
 
+app.get("/", (req, res) => {
+  res.send("Welcome to the Edunova! Use /api/v1/auth or /health");
+});
 // Routes
 app.use("/api/v1/auth", authRoutes);
 
