@@ -1,22 +1,34 @@
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const config = require('../config/config');
 
-const generateToken = (id) => {
-  return jwt.sign({ id }, config.JWT_SECRET, {
-    expiresIn: config.JWT_EXPIRE,
+const generateAccessToken = (id, role) => {
+  return jwt.sign({ id, role }, config.JWT_ACCESS_SECRET, {
+    expiresIn: config.JWT_ACCESS_EXPIRE,
   });
 };
 
-const sendTokenResponse = (user, statusCode, res) => {
-  const token = generateToken(user._id);
+const generateRefreshToken = () => {
+  return crypto.randomBytes(config.REFRESH_TOKEN_LENGTH / 2).toString('hex');
+};
 
-  // Update last login
-  user.lastLogin = new Date();
-  user.save();
+const verifyAccessToken = (token) => {
+  return jwt.verify(token, config.JWT_ACCESS_SECRET);
+};
+
+const sendTokenResponse = (user, accessToken, refreshToken, statusCode, res) => {
+  const refreshTokenExpireDate = new Date(Date.now() + config.REFRESH_TOKEN_EXPIRE_MS);
+
+  res.cookie('refreshToken', refreshToken, {
+    expires: refreshTokenExpireDate,
+    httpOnly: true,
+    secure: config.NODE_ENV === 'production',
+    sameSite: 'strict',
+  });
 
   res.status(statusCode).json({
     success: true,
-    token,
+    accessToken,
     data: {
       user: {
         id: user._id,
@@ -28,4 +40,9 @@ const sendTokenResponse = (user, statusCode, res) => {
   });
 };
 
-module.exports = { generateToken, sendTokenResponse };
+module.exports = {
+  generateAccessToken,
+  generateRefreshToken,
+  verifyAccessToken,
+  sendTokenResponse,
+};
