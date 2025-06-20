@@ -33,12 +33,12 @@ const userSchema = new mongoose.Schema(
     },
     isActive: {
       type: Boolean,
-      default: false,
+      default: true,
     },
     lastLogin: {
       type: Date,
     },
-    token: {
+    refreshToken: {
       type: String,
       select: false,
     },
@@ -52,7 +52,6 @@ const userSchema = new mongoose.Schema(
   }
 );
 
-// Hash password before saving
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
   const salt = await bcrypt.genSalt(12);
@@ -60,59 +59,30 @@ userSchema.pre("save", async function (next) {
   next();
 });
 
-// Compare password
 userSchema.methods.comparePassword = async function (candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password);
 };
 
-// Generate access token
 userSchema.methods.generateAccessToken = function () {
   const payload = { _id: this._id.toString(), role: this.role };
-  return jwt.sign(payload, config.JWT_ACCESS_SECRET || "your_jwt_secret", {
+  return jwt.sign(payload, config.JWT_ACCESS_SECRET, {
     expiresIn: config.JWT_ACCESS_EXPIRE,
   });
 };
 
-// Generate and store refresh token
-userSchema.methods.generateRefreshToken = async function () {
-  const payload = { _id: this._id.toString(), type: "refresh" };
-  const refreshToken = jwt.sign(
-    payload,
-    config.JWT_REFRESH_SECRET || "your_refresh_secret",
-    { expiresIn: config.JWT_REFRESH_EXPIRE }
-  );
-  this.refreshToken = refreshToken;
-  await this.save();
-  return refreshToken;
+userSchema.methods.setRefreshToken = async function (newRefreshToken) {
+  this.refreshToken = newRefreshToken;
 };
 
-// Compare passwords
-userSchema.methods.comparePassword = function (candidatePassword) {
-  return bcrypt.compare(candidatePassword, this.password);
+userSchema.methods.clearRefreshToken = async function () {
+  this.refreshToken = null;
 };
 
-// Sanitize output
 userSchema.methods.toJSON = function () {
   const user = this.toObject();
   delete user.password;
   delete user.refreshToken;
   return user;
-};
-
-// Invalidate refresh token (e.g., logout)
-userSchema.methods.invalidateRefreshToken = async function () {
-  this.refreshToken = null;
-  await this.save();
-};
-
-// Find user by access token
-userSchema.statics.findByToken = async function (token) {
-  try {
-    const decoded = jwt.verify(token, config.JWT_ACCESS_SECRET);
-    return await this.findById(decoded._id);
-  } catch {
-    throw new Error("Invalid token");
-  }
 };
 
 module.exports = mongoose.model("User", userSchema);

@@ -17,6 +17,7 @@ const xss = require("xss-clean");
 const config = require("./config/config");
 const { errorHandler, notFound } = require("./middleware/errorMiddleware");
 const authRoutes = require("./routes/authRoutes");
+const cookieParser = require("cookie-parser"); // Import cookie-parser
 
 const logger = require("./utils/logger");
 
@@ -28,6 +29,7 @@ app.use(cors());
 app.use(compression());
 app.use(mongoSanitize());
 app.use(xss());
+app.use(cookieParser()); // Add this line!
 
 // Rate limiting
 const limiter = rateLimit({
@@ -61,7 +63,6 @@ const connectDB = async () => {
   }
 };
 connectDB();
-
 
 process.on("unhandledRejection", (err) => {
   console.error("💥 UNHANDLED PROMISE REJECTION! Shutting down...");
