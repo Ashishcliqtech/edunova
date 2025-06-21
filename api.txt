@@ -1,30 +1,77 @@
-📋 API Endpoints
-Authentication:
+ 📑 API Endpoints Summary
 
-POST /api/auth/signup - User registration
-POST /api/auth/login - User/Admin login
-GET /api/auth/me - Get current user profile
 
-User Endpoints:
+ 🛡️ Auth Routes (`/api/v1/auth`)
 
-GET /api/user/courses - List courses (with filtering)
-GET /api/user/courses/:id - Get course details
-GET /api/user/events - List events (with filtering)
-GET /api/user/events/:id - Get event details
+| Method | URL                              | Description                                    | Access          |
+| :----- | :------------------------------- | :--------------------------------------------- | :-------------- |
+| POST   | `/api/v1/auth/signup`            | Register a new user with email, password, etc. | Public          |
+| POST   | `/api/v1/auth/verify-otp`        | Verify user via OTP after signup               | Public          |
+| POST   | `/api/v1/auth/send-otp`          | Send an OTP to the user (email or phone)       | Public          |
+| POST   | `/api/v1/auth/login`             | Log in a user and issue tokens                 | Public          |
+| GET    | `/api/v1/auth/refresh-token`     | Get a new access token via refresh token       | Public          |
+| POST   | `/api/v1/auth/logout`            | Log out current user                           | Logged-in users |
+| POST   | `/api/v1/auth/forgot-password`   | Initiate password reset via OTP                | Public          |
+| POST   | `/api/v1/auth/reset-password`    | Reset password after OTP verification          | Public          |
+| POST   | `/api/v1/auth/verify-forgot-otp` | Verify OTP for forgot password process         | Public          |
+| POST   | `/api/v1/auth/change-password`   | Change password for logged-in user             | Logged-in users |
+| GET    | `/api/v1/auth/me`                | Get current logged-in user's profile info      | Logged-in users |
 
-Admin Endpoints:
+---
 
-GET /api/admin/dashboard - Dashboard statistics
-GET /api/admin/courses - List all courses
-POST /api/admin/courses - Create course
-PUT /api/admin/courses/:id - Update course
-DELETE /api/admin/courses/:id - Delete course
-GET /api/admin/events - List all events
-POST /api/admin/events - Create event
-PUT /api/admin/events/:id - Update event
-DELETE /api/admin/events/:id - Delete event
+ 🎓 Course Routes (`/api/v1`)
 
-🔒 Default Admin Credentials
+ Public
 
-Email: admin@company.com
-Password: Admin@123456
+| Method | URL                   | Description                            |
+| :----- | :-------------------- | :------------------------------------- |
+| GET    | `/api/v1/courses`     | Get list of all courses                |
+| GET    | `/api/v1/courses/:id` | Get details of a specific course by ID |
+
+ Admin (Protected + Admin Only)
+
+| Method | URL                         | Description                             |
+| :----- | :-------------------------- | :-------------------------------------- |
+| POST   | `/api/v1/admin/courses`     | Create a new course (with image upload) |
+| PUT    | `/api/v1/admin/courses/:id` | Update course by ID (image optional)    |
+| DELETE | `/api/v1/admin/courses/:id` | Delete a course by ID                   |
+
+---
+
+ 📅 Event Routes (`/api/v1`)
+
+ Public & User
+
+| Method | URL                         | Description                               |
+| :----- | :-------------------------- | :---------------------------------------- |
+| GET    | `/api/v1/events`            | Get list of all events                    |
+| GET    | `/api/v1/events/:id`        | Get event details by ID                   |
+| POST   | `/api/v1/events/:id/enroll` | Enroll logged-in user into an event by ID |
+
+ Admin (Protected + Admin Only)
+
+| Method | URL                        | Description                                 |
+| :----- | :------------------------- | :------------------------------------------ |
+| POST   | `/api/v1/admin/events`     | Create a new event (with image upload)      |
+| PUT    | `/api/v1/admin/events/:id` | Update event details by ID (image optional) |
+| DELETE | `/api/v1/admin/events/:id` | Soft delete an event by ID                  |
+GET	    /api/v1/admin/enrollments/pending	                        Fetch all pending (unpaid) enrollments
+POST	/api/v1/admin/enrollments/:enrollmentId/confirm	        Confirm payment for an enrollment (mark as paid)
+
+---
+
+ 📊 Miscellaneous
+
+| Method | URL       | Description           |
+| :----- | :-------- | :-------------------- |
+| GET    | `/health` | Health check endpoint |
+| GET    | `/`       | Root welcome message  |
+
+---
+
+ ✅ Notes
+
+ All Admin routes require both `protect` (authentication) and `adminOnly` (role check) middleware.
+ Image uploads for events and courses handled via `uploadToCloudinary('image')`.
+ Auth routes have appropriate validation middleware for input sanitization.
+ Rate limiting, CORS, XSS protection, and MongoDB sanitization are globally applied in the server.

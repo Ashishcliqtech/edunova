@@ -103,30 +103,16 @@ const validateCourse = [
     .trim()
     .isLength({ min: 10, max: 1000 })
     .withMessage("Description must be between 10 and 1000 characters"),
-  body("instructor")
-    .trim()
-    .isLength({ min: 2, max: 50 })
-    .withMessage("Instructor name must be between 2 and 50 characters"),
-  body("duration")
-    .isInt({ min: 1, max: 1000 })
-    .withMessage("Duration must be between 1 and 1000 hours"),
-  body("price")
-    .isFloat({ min: 0 })
-    .withMessage("Price must be a positive number"),
-  body("category")
-    .isIn([
-      "Programming",
-      "Design",
-      "Business",
-      "Marketing",
-      "Photography",
-      "Music",
-      "Other",
-    ])
-    .withMessage("Invalid category"),
-  body("level")
-    .isIn(["Beginner", "Intermediate", "Advanced"])
-    .withMessage("Invalid level"),
+  // If 'image' is a URL string in the body, validate it as such.
+  // If 'image' is handled via file upload middleware (like multer),
+  // then it won't be in body directly and won't need body validation here.
+  // Assuming 'image' is an optional URL string in the body for this validation:
+  body("image")
+    .optional() // Make image optional, or .notEmpty() if it's required
+    .isURL()
+    .withMessage("Image must be a valid URL"),
+  // Removed validations for 'instructor', 'duration', 'price', 'category', 'level'
+  // as they are not present in your provided `createCourse` controller's `req.body` destructuring.
   handleValidationErrors,
 ];
 
@@ -134,42 +120,30 @@ const validateEvent = [
   body("title")
     .trim()
     .isLength({ min: 3, max: 100 })
-    .withMessage("Title must be between 3 and 100 characters"),
+    .withMessage("Title must be between 3 and 100 characters")
+    .notEmpty().withMessage("Event title is required"), // Added notEmpty for required field
   body("description")
     .trim()
     .isLength({ min: 10, max: 1000 })
-    .withMessage("Description must be between 10 and 1000 characters"),
-  body("date")
-    .isISO8601()
-    .withMessage("Please provide a valid date")
-    .custom((value) => {
-      if (new Date(value) <= new Date()) {
-        throw new Error("Event date must be in the future");
-      }
-      return true;
-    }),
-  body("location")
-    .trim()
-    .isLength({ min: 3, max: 200 })
-    .withMessage("Location must be between 3 and 200 characters"),
-  body("capacity")
-    .isInt({ min: 1, max: 10000 })
-    .withMessage("Capacity must be between 1 and 10000"),
+    .withMessage("Description must be between 10 and 1000 characters")
+    .notEmpty().withMessage("Event description is required"), // Added notEmpty for required field
   body("price")
     .isFloat({ min: 0 })
-    .withMessage("Price must be a positive number"),
-  body("category")
-    .isIn([
-      "Conference",
-      "Workshop",
-      "Seminar",
-      "Webinar",
-      "Networking",
-      "Other",
-    ])
-    .withMessage("Invalid category"),
+    .withMessage("Price must be a positive number")
+    .notEmpty().withMessage("Event price is required"), // Added notEmpty for required field
+  body("paymentUrl")
+    .trim()
+    .notEmpty().withMessage("Payment URL is required") // Required field
+    .isURL().withMessage("Payment URL must be a valid URL") // Basic URL validation
+    .isLength({ max: 500 }).withMessage("Payment URL cannot exceed 500 characters"),
+  body("image")
+    .optional({ checkFalsy: true }) // Allows field to be missing or empty string/null
+    .isURL().withMessage("Image URL must be a valid URL") // Validate if present
+    .isLength({ max: 500 }).withMessage("Image URL cannot exceed 500 characters"),
+  
   handleValidationErrors,
 ];
+
 
 const validateObjectId = [
   param("id").isMongoId().withMessage("Invalid ID format"),

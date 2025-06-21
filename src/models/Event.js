@@ -15,54 +15,46 @@ const eventSchema = new mongoose.Schema({
     minlength: [10, 'Description must be at least 10 characters long'],
     maxlength: [1000, 'Description cannot exceed 1000 characters']
   },
-  date: {
-    type: Date,
-    required: [true, 'Event date is required'],
-    validate: {
-      validator: function(value) {
-        return value > new Date();
-      },
-      message: 'Event date must be in the future'
-    }
-  },
-  location: {
-    type: String,
-    required: [true, 'Event location is required'],
-    trim: true,
-    maxlength: [200, 'Location cannot exceed 200 characters']
-  },
-  capacity: {
-    type: Number,
-    required: [true, 'Event capacity is required'],
-    min: [1, 'Capacity must be at least 1'],
-    max: [10000, 'Capacity cannot exceed 10000']
-  },
   price: {
     type: Number,
     required: [true, 'Event price is required'],
     min: [0, 'Price cannot be negative']
   },
-  category: {
+  paymentUrl: { // New field for payment link
     type: String,
-    required: [true, 'Event category is required'],
+    required: [true, 'Payment URL is required'],
     trim: true,
-    enum: ['Conference', 'Workshop', 'Seminar', 'Webinar', 'Networking', 'Other']
+    validate: {
+      validator: function(v) {
+        return /^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/i.test(v); // Basic URL validation
+      },
+      message: props => `${props.value} is not a valid URL!`
+    },
+    maxlength: [500, 'Payment URL cannot exceed 500 characters']
   },
-  isActive: {
+  image: { // New field for event image URL
+    type: String,
+    trim: true,
+    default: 'https://via.placeholder.com/400x300.png?text=Event+Image', // Placeholder or default image
+    validate: {
+      validator: function(v) {
+        return v === null || /^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/i.test(v); // Optional URL validation
+      },
+      message: props => `${props.value} is not a valid image URL!`
+    },
+    maxlength: [500, 'Image URL cannot exceed 500 characters']
+  },
+  createdBy: {
+  type: mongoose.Schema.ObjectId,
+  ref: 'User',
+  required: [false, 'Event must belong to a user']
+  },
+  isActive: { // Assuming courses can be soft-deleted or activated/deactivated
     type: Boolean,
     default: true
   },
-  createdBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
-  }
 }, {
-  timestamps: true
+  timestamps: true // Keep timestamps for createdAt and updatedAt
 });
-
-// Index for better performance
-eventSchema.index({ date: 1, category: 1 });
-eventSchema.index({ isActive: 1 });
 
 module.exports = mongoose.model('Event', eventSchema);

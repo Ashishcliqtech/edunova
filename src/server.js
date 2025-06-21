@@ -17,6 +17,8 @@ const xss = require("xss-clean");
 const config = require("./config/config");
 const { errorHandler, notFound } = require("./middleware/errorMiddleware");
 const authRoutes = require("./routes/authRoutes");
+const courseRoutes = require('./routes/courseRoutes');
+const eventRoutes = require('./routes/eventRoutes');
 const cookieParser = require("cookie-parser"); // Import cookie-parser
 
 const logger = require("./utils/logger");
@@ -83,6 +85,8 @@ app.get("/", (req, res) => {
 });
 // Routes
 app.use("/api/v1/auth", authRoutes);
+app.use('/api/v1', courseRoutes);
+app.use('/api/v1', eventRoutes);
 
 // Error handling middleware
 app.use(notFound);
