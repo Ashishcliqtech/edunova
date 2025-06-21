@@ -117,6 +117,11 @@ const verifyOtp = catchAsync(async (req, res, next) => {
     // Clean up Redis
     await redis.del(redisKey);
 
+    // Set custom headers
+
+    res.setHeader("x-access-token", accessToken);
+    res.setHeader("x-user-id", newUser._id.toString());
+
     return sendTokenResponse(newUser, accessToken, refreshToken, 200, res);
   } catch (error) {
     logger.error("Error during OTP verification:", error);
@@ -168,6 +173,10 @@ const login = catchAsync(async (req, res, next) => {
     await user.setRefreshToken(refreshToken);
     user.lastLogin = new Date();
     await user.save({ validateBeforeSave: false });
+
+    // Set custom headers
+    res.setHeader("x-access-token", accessToken);
+    res.setHeader("x-user-id", user._id.toString());
 
     return sendTokenResponse(user, accessToken, refreshToken, 200, res);
   } catch (error) {
