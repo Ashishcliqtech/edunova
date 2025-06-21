@@ -31,6 +31,16 @@ app.use(mongoSanitize());
 app.use(xss());
 app.use(cookieParser()); // Add this line!
 
+// Expose custom headers to client JavaScript
+app.use((req, res, next) => {
+  res.setHeader(
+    "Access-Control-Expose-Headers",
+    "x-access-token, x-user-id, x-company-id, x-workspace-id, x-team-id"
+  );
+  next();
+});
+
+
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
