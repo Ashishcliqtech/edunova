@@ -118,7 +118,6 @@ const verifyOtp = catchAsync(async (req, res, next) => {
     await redis.del(redisKey);
 
     // Set custom headers
-
     res.setHeader("x-access-token", accessToken);
     res.setHeader("x-user-id", newUser._id.toString());
 
