@@ -28,6 +28,14 @@ module.exports = {
     process.env.MONGODB_URI || "mongodb://localhost:27017/enterprise-db",
   REFRESH_TOKEN_LENGTH: process.env.REFRESH_TOKEN_LENGTH || 64,
   REFRESH_TOKEN_EXPIRE: process.env.REFRESH_TOKEN_EXPIRE,
+  
+  // Cloudinary configuration
+  CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME,
+  CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY,
+  CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET,
+  CLOUDINARY_UPLOAD_FOLDER: process.env.CLOUDINARY_UPLOAD_FOLDER || 'default_uploads',
+
+
   // 7 days in milliseconds
   REFRESH_TOKEN_EXPIRE_MS: parseTimeToMs(
     process.env.REFRESH_TOKEN_EXPIRE,
@@ -39,4 +47,6 @@ module.exports = {
   ADMIN_PASSWORD: process.env.ADMIN_PASSWORD || "Admin@123456",
   UPSTASH_REDIS_REST_URL: process.env.UPSTASH_REDIS_REST_URL,
   UPSTASH_REDIS_REST_TOKEN: process.env.UPSTASH_REDIS_REST_TOKEN,
+
+ 
 };

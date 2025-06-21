@@ -15,49 +15,26 @@ const courseSchema = new mongoose.Schema({
     minlength: [10, 'Description must be at least 10 characters long'],
     maxlength: [1000, 'Description cannot exceed 1000 characters']
   },
-  instructor: {
-    type: String,
-    required: [true, 'Instructor name is required'],
-    trim: true,
-    maxlength: [50, 'Instructor name cannot exceed 50 characters']
+  image: {
+    type: String, // This field will store the Cloudinary URL of the image
+    required: [true, 'Course image is required'],
+    trim: true
   },
-  duration: {
-    type: Number,
-    required: [true, 'Course duration is required'],
-    min: [1, 'Duration must be at least 1 hour'],
-    max: [1000, 'Duration cannot exceed 1000 hours']
+  // NEW: Add createdBy field to link course to the user who created it
+  createdBy: {
+    type: mongoose.Schema.ObjectId,
+    ref: 'User', // Reference the User model
+    required: [false, 'Course must belong to a user']
   },
-  price: {
-    type: Number,
-    required: [true, 'Course price is required'],
-    min: [0, 'Price cannot be negative']
-  },
-  category: {
-    type: String,
-    required: [true, 'Course category is required'],
-    trim: true,
-    enum: ['Programming', 'Design', 'Business', 'Marketing', 'Photography', 'Music', 'Other']
-  },
-  level: {
-    type: String,
-    required: [true, 'Course level is required'],
-    enum: ['Beginner', 'Intermediate', 'Advanced']
-  },
-  isActive: {
+  isActive: { // Assuming courses can be soft-deleted or activated/deactivated
     type: Boolean,
     default: true
-  },
-  createdBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
   }
 }, {
-  timestamps: true
+  timestamps: true // This will automatically add createdAt and updatedAt fields
 });
 
 // Index for better performance
-courseSchema.index({ title: 1, category: 1 });
-courseSchema.index({ isActive: 1 });
+courseSchema.index({ title: 1 });
 
 module.exports = mongoose.model('Course', courseSchema);
