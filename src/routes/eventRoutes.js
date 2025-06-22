@@ -5,11 +5,10 @@ const {
   createEvent,
   updateEvent,
   deleteEvent,
-  getEvents,
+  getUserEvents,
+  getAdminEvents,
   getEventById,
-  enrollInEvent,
-  getPendingEnrollments,
-  confirmPayment
+  enrollInEvent
 } = require('../controllers/eventController');
 
 const { protect, adminOnly } = require('../middleware/authMiddleware');
@@ -21,7 +20,7 @@ const { uploadToCloudinary } = require('../middleware/uploadMiddleware');
 // =========================
 
 // GET /api/v1/events - Public 
-router.get('/events', getEvents);
+router.get('/events', getUserEvents);
 
 // GET /api/v1/events/:id - Public 
 router.get('/events/:id', getEventById);
@@ -33,6 +32,8 @@ router.post('/events/:id/enroll', protect, enrollInEvent);
 // ADMIN ROUTES
 // =========================
 
+router.get('/admin/events-all', protect, adminOnly, getAdminEvents);
+
 // POST /api/v1/admin/events - Create event
 router.post('/admin/events', protect, adminOnly, uploadToCloudinary('image'),validateEvent, createEvent);
 
@@ -42,10 +43,5 @@ router.put('/admin/events/:id', protect, adminOnly, uploadToCloudinary('image'),
 // DELETE /api/v1/admin/events/:id - Soft delete
 router.delete('/admin/events/:id', protect, adminOnly, deleteEvent);
 
-// View pending enrollments
-router.get('/admin/enrollments/pending', protect, adminOnly, getPendingEnrollments);
-
-// Confirm payment for an enrollment
-router.post('/admin/enrollments/:enrollmentId/confirm', protect, adminOnly, confirmPayment);
 
 module.exports = router;

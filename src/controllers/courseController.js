@@ -52,24 +52,14 @@ const deleteCourse = catchAsync(async (req, res, next) => {
 });
 
 
-// GET /api/admin/courses Reusable for both Admin & User
-const getCourses = catchAsync(async (req, res, next) => {
+const getUserCourses = catchAsync(async (req, res, next) => {
   const page = Math.max(parseInt(req.query.page) || 1, 1);
   const limit = Math.max(parseInt(req.query.limit) || 10, 1);
   const skip = (page - 1) * limit;
 
-  const filter = {};
+  const filter = { isActive: true }; // Always show only active courses for users/public
 
-  const isAdmin = req.user && req.user.role === 'admin';
-
-  // For users: only show active courses
-  if (!isAdmin) {
-    filter.isActive = true;
-  } else if (req.query.status) {
-    filter.isActive = req.query.status === 'active';
-  }
-
-  // Search filter
+  // Search filter - uses 'title' and 'description' from your Course schema
   if (req.query.search) {
     const regex = new RegExp(req.query.search, 'i');
     filter.$or = [{ title: regex }, { description: regex }];
@@ -80,10 +70,42 @@ const getCourses = catchAsync(async (req, res, next) => {
     .limit(limit)
     .sort({ createdAt: -1 });
 
-  // Admin gets creator info
-  if (isAdmin) {
-    query.populate('createdBy', 'name email');
+  const [courses, total] = await Promise.all([
+    query,
+    Course.countDocuments(filter)
+  ]);
+
+  res.status(200).json({
+    success: true,
+    count: courses.length,
+    total,
+    currentPage: page,
+    totalPages: Math.ceil(total / limit),
+    data: { courses }
+  });
+});
+
+
+
+// GET /api/v1/admin/courses-all (Admin only - view all courses, active or inactive)
+const getAdminCourses = catchAsync(async (req, res, next) => {
+  const page = Math.max(parseInt(req.query.page) || 1, 1);
+  const limit = Math.max(parseInt(req.query.limit) || 10, 1);
+  const skip = (page - 1) * limit;
+
+  const filter = {}; // Admins see all courses, no default isActive filter
+
+  // Search filter - uses 'title' and 'description' from your Course schema
+  if (req.query.search) {
+    const regex = new RegExp(req.query.search, 'i');
+    filter.$or = [{ title: regex }, { description: regex }];
   }
+
+  const query = Course.find(filter)
+    .skip(skip)
+    .limit(limit)
+    .sort({ createdAt: -1 })
+    .populate('createdBy', 'name email'); // Admins get creator info
 
   const [courses, total] = await Promise.all([
     query,
@@ -123,6 +145,7 @@ module.exports = {
   createCourse,
   updateCourse,
   deleteCourse,
-  getCourses,
+  getUserCourses,
+  getAdminCourses,
   getCourseById
 };

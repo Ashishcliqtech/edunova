@@ -66,28 +66,64 @@ const deleteEvent = catchAsync(async (req, res, next) => {
   });
 });
 
-// GET /api/v1/admin/events
+
 // GET /api/v1/events
-const getEvents = catchAsync(async (req, res, next) => {
+const getUserEvents = catchAsync(async (req, res, next) => {
   const page = Math.max(parseInt(req.query.page) || 1, 1);
   const limit = Math.max(parseInt(req.query.limit) || 10, 1);
   const skip = (page - 1) * limit;
 
-  const filter = {};
-  const isAdmin = req.user && req.user.role === 'admin';
+  const filter = { isActive: true }; // Always show only active events for users/public
 
-  if (!isAdmin) {
-    filter.isActive = true;
-  } else if (req.query.status) {
-    filter.isActive = req.query.status === 'active';
+  // Search filter - uses 'title' and 'description' from your Event schema
+  if (req.query.search) {
+    const regex = new RegExp(req.query.search, 'i');
+    filter.$or = [{ title: regex }, { description: regex }];
+    // Add other relevant fields if available in your Event model, e.g.,
+    // { location: regex }, { tags: regex }
   }
 
   const query = Event.find(filter)
     .skip(skip)
     .limit(limit)
-    .sort({ date: 1 });
+    .sort({ createdAt: -1 }); // Assuming you have a createdAt field
 
-  if (isAdmin) query.populate('createdBy', 'name email');
+  const [events, total] = await Promise.all([
+    query,
+    Event.countDocuments(filter)
+  ]);
+
+  res.status(200).json({
+    success: true,
+    count: events.length,
+    total,
+    currentPage: page,
+    totalPages: Math.ceil(total / limit),
+    data: { events }
+  });
+});
+
+// GET /api/v1/admin/events
+const getAdminEvents = catchAsync(async (req, res, next) => {
+  const page = Math.max(parseInt(req.query.page) || 1, 1);
+  const limit = Math.max(parseInt(req.query.limit) || 10, 1);
+  const skip = (page - 1) * limit;
+
+  const filter = {}; // Admins see all events, no default isActive filter
+
+  // Search filter - uses 'title' and 'description' from your Event schema
+  if (req.query.search) {
+    const regex = new RegExp(req.query.search, 'i');
+    filter.$or = [{ title: regex }, { description: regex }];
+    // Add other relevant fields if available in your Event model, e.g.,
+    // { location: regex }, { tags: regex }
+  }
+
+  const query = Event.find(filter)
+    .skip(skip)
+    .limit(limit)
+    .sort({ createdAt: -1 }) // Assuming you have a createdAt field
+    .populate('createdBy', 'name email'); // Admins get creator info
 
   const [events, total] = await Promise.all([
     query,
@@ -120,85 +156,32 @@ const getEventById = catchAsync(async (req, res, next) => {
 // POST /api/v1/events/:id/enroll
 const enrollInEvent = catchAsync(async (req, res, next) => {
   const event = await Event.findById(req.params.id);
-  if (!event) return next(new AppError('Event not found', 404));
 
-  // Create enrollment record
-  const enrollment = await Enrollment.create({
-    event: event._id,
-    user: req.user._id,
-    isPaid: false,
-  });
+  if (!event || !event.isActive) {
+    return next(new AppError('Event not found', 404));
+  }
 
-  res.status(201).json({
-    status: 'success',
-    message: 'Enrolled successfully!',
-    enrollment,
-  });
-});
-
-// const enrollInEvent = catchAsync(async (req, res, next) => {
-//   const event = await Event.findById(req.params.id);
-//   if (!event) return next(new AppError('Event not found', 404));
-
-//   // Create enrollment record first
-//   const enrollment = await Enrollment.create({
-//     event: event._id,
-//     user: req.user._id,
-//   });
-
-//   // Generate dynamic UPI payment link using PhonePeService
-//   const transactionId = `TID-${enrollment._id}-${Date.now()}`;
-//   const paymentLink = PhonePeService.generatePaymentLink({
-//     amount: event.price,  // event.price in INR
-//     transactionId,
-//     mobile: req.user.phone,  // assuming you have phone in user model
-//     name: req.user.name,     // assuming you have name in user model
-//   });
-
-//   // Redirect to generated UPI payment link
-//   return res.redirect(paymentLink);
-// });
-
-
-
-
-// GET /api/v1/admin/enrollments/pending
-
-
-const getPendingEnrollments = catchAsync(async (req, res, next) => {
-  const enrollments = await Enrollment.find({ isPaid: false }).populate('user event');
-
+  if (!event.paymentUrl) {
+    return next(new AppError('Payment URL not available for this event', 400));
+  }
+  
   res.status(200).json({
-    status: 'success',
-    results: enrollments.length,
-    enrollments,
+    success: true,
+    paymentUrl: event.paymentUrl,
+    message: 'Redirect to payment URL',
   });
 });
 
-// POST /api/v1/admin/enrollments/:enrollmentId/confirm
-const confirmPayment = catchAsync(async (req, res, next) => {
-  const enrollment = await Enrollment.findById(req.params.enrollmentId);
-  if (!enrollment) return next(new AppError('Enrollment not found', 404));
 
-  enrollment.isPaid = true;
-  await enrollment.save();
-
-  res.status(200).json({
-    status: 'success',
-    message: 'Payment confirmed successfully',
-    enrollment,
-  });
-});
 
 
 module.exports = {
   createEvent,
   updateEvent,
   deleteEvent,
-  getEvents,
+  getUserEvents,
+  getAdminEvents,
   getEventById,
-  enrollInEvent,
-  getPendingEnrollments,
-  confirmPayment
+  enrollInEvent
 
 };

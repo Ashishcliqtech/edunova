@@ -5,7 +5,8 @@ const {
   createCourse,
   updateCourse,
   deleteCourse,
-  getCourses,
+  getUserCourses,
+  getAdminCourses,
   getCourseById,
 } = require('../controllers/courseController');
 
@@ -18,7 +19,7 @@ const { validateCourse } = require('../middleware/validationMiddleware'); // Ass
 // =======================
 
 // GET /api/v1/courses 
-router.get('/courses', getCourses);
+router.get('/courses', getUserCourses);
 
 // GET /api/v1/courses/:id 
 router.get('/courses/:id', getCourseById);
@@ -26,6 +27,13 @@ router.get('/courses/:id', getCourseById);
 // =======================
 // ADMIN ROUTES
 // =======================
+
+
+router.get(
+  '/admin/courses-all',
+  protect,
+  adminOnly, 
+  getAdminCourses);
 
 // POST /api/v1/admin/courses - Admin Only
 router.post(
