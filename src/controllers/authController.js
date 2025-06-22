@@ -120,8 +120,9 @@ const verifyOtp = catchAsync(async (req, res, next) => {
     // Set custom headers
     res.setHeader("x-access-token", accessToken);
     res.setHeader("x-user-id", newUser._id.toString());
-
-    return sendTokenResponse(newUser, accessToken, refreshToken, 200, res);
+    res.setHeader("x-user-role", newUser.role);
+    logger.info(`User role: ${newUser.role}`);
+    return sendTokenResponse(newUser, refreshToken, 200, res);
   } catch (error) {
     logger.error("Error during OTP verification:", error);
     return next(
@@ -176,8 +177,10 @@ const login = catchAsync(async (req, res, next) => {
     // Set custom headers
     res.setHeader("x-access-token", accessToken);
     res.setHeader("x-user-id", user._id.toString());
+    res.setHeader("x-user-role", user.role);
+    logger.info(`User role: ${user.role}`);
 
-    return sendTokenResponse(user, accessToken, refreshToken, 200, res);
+    return sendTokenResponse(user, refreshToken, 200, res);
   } catch (error) {
     logger.error(`Error during login:`, error);
     return next(new AppError("Internal server error during login", 500, error));
