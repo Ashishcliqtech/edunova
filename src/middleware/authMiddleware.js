@@ -5,56 +5,25 @@ const config = require('../config/config');
 const { AppError } = require('../utils/errorUtils');
 const redisClient = require('../utils/redisClient/redisclient');
 
-const publicRoutes = [
-  '/api/v1/courses',
-  '/api/v1/courses/:id',
-  '/api/v1/events',
-  '/api/v1/events/:id',
-  '/api/v1/blog/posts',
-  '/api/v1/blog/posts/:id',
-  '/api/v1/testimonials',
-  '/api/v1/certificates/verify/:code',
-  '/api/v1/about',
-  '/api/v1/footer',
-  '/api/v1/auth/login',
-  '/api/v1/auth/register', // Assuming /api/v1/auth/signup is meant here from your API summary
-  '/api/v1/auth/refresh-token',
-  // Add other public routes as needed, e.g., for OTP sending/verification
-  '/api/v1/auth/send-otp',
-  '/api/v1/auth/verify-otp',
-  '/api/v1/auth/forgot-password',
-  '/api/v1/auth/reset-password',
-  '/api/v1/auth/verify-forgot-otp',
-  // Health and root routes
-  '/health',
-  '/'
-];
-
+// Middleware to verify user authentication
 const protect = async (req, res, next) => {
   try {
-    const currentPath = req.path;
-    const currentMethod = req.method;
-
-    // Check if the current route is a public GET route (flexible check)
-    const isPublicGetRoute = publicRoutes.some(routePath => {
-        // Handle dynamic routes like /api/v1/courses/:id
-        const pattern = new RegExp(`^${routePath.replace(/:\w+/g, '[^/]+')}$`);
-        return pattern.test(currentPath) && currentMethod === 'GET';
-    });
-
-    if (isPublicGetRoute) {
-      req.user = null; // Ensure req.user is null for public access
-      req.isAuthenticated = false;
-      return next(); // Allow access to public GET routes without token
+    // Support both Authorization and x-access-token headers
+    let accessToken;
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      accessToken = authHeader.split(' ')[1];
+    } else if (req.headers['x-access-token']) {
+      accessToken = req.headers['x-access-token'];
     }
 
-    // Attempt to verify the token from the request (will check cookies then headers)
-    const decoded = verifyAccessToken(req); // Pass the entire request object here
-    
-    // Check if token is blacklisted (if a blacklist mechanism is implemented)
-    // Note: Blacklisting access tokens in Redis is more common for short-lived tokens,
-    // and relies on efficient Redis lookups.
-    const isBlacklisted = await redisClient.get(`blacklist:${decoded.jti || decoded.id}`); // Use JTI or a unique ID from token
+    if (!accessToken) {
+      return next(new AppError('Access denied. No token provided.', 401));
+    }
+
+    const decoded = verifyAccessToken(accessToken);
+
+    const isBlacklisted = await redisClient.get(`blacklist:${accessToken}`);
     if (isBlacklisted) {
       return next(new AppError('Access token is blacklisted. Please log in again.', 401));
     }
@@ -86,23 +55,26 @@ const protect = async (req, res, next) => {
   }
 };
 
+// Middleware to restrict access to admin users
 const adminOnly = async (req, res, next) => {
-  if (!req.isAuthenticated || !req.user?.id) { // req.user.id is now safe because req.user is the Mongoose document
-    return next(new AppError('Authentication required to check admin privileges.', 401));
+  if (!req.user?.id) {
+    return next(new AppError('Authentication required.', 401));
   }
 
-  // If req.user is already a Mongoose document, directly check its role
-  if (req.user.role !== 'admin') {
-    // If you need to re-fetch the user to ensure latest role from DB
-    // (e.g., if roles can change frequently after token issuance)
-    // const userInDB = await User.findById(req.user.id).select('role');
-    // if (!userInDB || userInDB.role !== 'admin') {
-    //   return next(new AppError('Admin privileges required.', 403));
-    // }
-    return next(new AppError('Admin privileges required.', 403));
-  }
+  try {
+    const userInDB = await User.findById(req.user.id).select('role isActive');
 
-  next();
+    if (!userInDB) return next(new AppError('User not found.', 404));
+    if (!userInDB.isActive) return next(new AppError('Account deactivated.', 401));
+    if (userInDB.role !== 'admin') {
+      return next(new AppError('Admin privileges required.', 403));
+    }
+
+    req.user.role = userInDB.role;
+    next();
+  } catch (error) {
+    next(new AppError('Authorization error', 500));
+  }
 };
 
 module.exports = { protect, adminOnly };
