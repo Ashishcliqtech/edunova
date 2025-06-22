@@ -37,7 +37,7 @@ app.use(cookieParser()); // Add this line!
 app.use((req, res, next) => {
   res.setHeader(
     "Access-Control-Expose-Headers",
-    "x-access-token, x-user-id, x-company-id, x-workspace-id, x-team-id"
+    "x-access-token, x-user-id, x-user-role"
   );
   next();
 });
