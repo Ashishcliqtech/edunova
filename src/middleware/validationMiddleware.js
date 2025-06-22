@@ -144,6 +144,29 @@ const validateEvent = [
   handleValidationErrors,
 ];
 
+const validateBlog = [
+  body("title")
+    .trim()
+    .notEmpty().withMessage("Blog title is required")
+    .isLength({ min: 3, max: 200 })
+    .withMessage("Title must be between 3 and 200 characters long"),
+  
+  body("description")
+    .trim()
+    .notEmpty().withMessage("Blog description is required")
+    .isLength({ min: 50, max: 5000 })
+    .withMessage("Description must be between 50 and 5000 characters long"),
+  
+  body("image")
+    .trim()
+    .notEmpty().withMessage("Blog image is required")
+    .isURL().withMessage("Image URL must be a valid URL"), 
+
+  handleValidationErrors 
+];
+
+
+
 
 const validateObjectId = [
   param("id").isMongoId().withMessage("Invalid ID format"),
@@ -160,4 +183,5 @@ module.exports = {
   validateSendOtp,
   validateChangePasswordDto,
   resetPasswordDto,
+  validateBlog
 };

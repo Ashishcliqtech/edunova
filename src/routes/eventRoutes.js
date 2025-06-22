@@ -44,8 +44,8 @@ router.post(
   createEvent
 );
 
-// PUT /api/v1/admin/events/:id - Update event
-router.put(
+// Patch /api/v1/admin/events/:id - Update event
+router.patch(
   "/admin/events/:id",
   protect,
   adminOnly,

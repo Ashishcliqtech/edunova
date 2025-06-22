@@ -1,5 +1,4 @@
 const Event = require('../models/Event');
-const Enrollment = require('../models/enrollmentModel');
 const { catchAsync, AppError } = require('../utils/errorUtils');
 const PhonePeService = require('../utils/phonepe/PhonePeService');
 

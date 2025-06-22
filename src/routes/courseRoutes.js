@@ -12,7 +12,7 @@ const {
 
 const { protect, adminOnly } = require('../middleware/authMiddleware'); // path to protect.js
 const { uploadToCloudinary } = require('../middleware/uploadMiddleware');
-const { validateCourse } = require('../middleware/validationMiddleware'); // Assuming you have a validation middleware for courses
+const { validateCourse } = require('../middleware/validationMiddleware'); 
 
 // =======================
 // PUBLIC ROUTES
@@ -45,8 +45,8 @@ router.post(
   createCourse
 );
 
-// PUT /api/v1/admin/courses/:id - Admin Only
-router.put(
+// patch /api/v1/admin/courses/:id - Admin Only
+router.patch(
   '/admin/courses/:id',
   protect,
   adminOnly,
