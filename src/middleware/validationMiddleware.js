@@ -165,6 +165,69 @@ const validateBlog = [
   handleValidationErrors 
 ];
 
+const validateUpdateCourse = [
+  body("title")
+    .optional() // Make title optional for updates
+    .trim()
+    .isLength({ min: 3, max: 100 })
+    .withMessage("Title must be between 3 and 100 characters"),
+  body("description")
+    .optional() // Make description optional for updates
+    .trim()
+    .isLength({ min: 10, max: 1000 })
+    .withMessage("Description must be between 10 and 1000 characters"),
+  body("image")
+    .optional() // Make image optional for updates (and checkFalsy if empty string is allowed)
+    .isURL()
+    .withMessage("Image must be a valid URL"),
+  handleValidationErrors,
+];
+
+const validateUpdateEvent = [
+  body("title")
+    .optional() // Make title optional for updates
+    .trim()
+    .isLength({ min: 3, max: 100 })
+    .withMessage("Title must be between 3 and 100 characters"),
+  body("description")
+    .optional() // Make description optional for updates
+    .trim()
+    .isLength({ min: 10, max: 1000 })
+    .withMessage("Description must be between 10 and 1000 characters"),
+  body("price")
+    .optional() // Make price optional for updates
+    .isFloat({ min: 0 })
+    .withMessage("Price must be a positive number"),
+  body("paymentUrl")
+    .optional() // Make paymentUrl optional for updates
+    .trim()
+    .isURL().withMessage("Payment URL must be a valid URL")
+    .isLength({ max: 500 }).withMessage("Payment URL cannot exceed 500 characters"),
+  body("image")
+    .optional({ checkFalsy: true }) // Allows field to be missing, null, or empty string for updates
+    .isURL().withMessage("Image URL must be a valid URL")
+    .isLength({ max: 500 }).withMessage("Image URL cannot exceed 500 characters"),
+  handleValidationErrors,
+];
+
+const validateUpdateBlog = [
+  body("title")
+    .optional() // Make title optional for updates
+    .trim()
+    .isLength({ min: 3, max: 200 })
+    .withMessage("Title must be between 3 and 200 characters long"),
+  body("description")
+    .optional() // Make description optional for updates
+    .trim()
+    .isLength({ min: 50, max: 5000 })
+    .withMessage("Description must be between 50 and 5000 characters long"),
+  body("image")
+    .optional() // Make image optional for updates
+    .trim()
+    .isURL().withMessage("Image URL must be a valid URL"),
+  handleValidationErrors
+];
+
 
 
 
@@ -183,5 +246,8 @@ module.exports = {
   validateSendOtp,
   validateChangePasswordDto,
   resetPasswordDto,
-  validateBlog
+  validateBlog,
+  validateUpdateCourse,
+  validateUpdateEvent,
+  validateUpdateBlog,
 };

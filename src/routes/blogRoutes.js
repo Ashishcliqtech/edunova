@@ -8,7 +8,7 @@ const {
   getAllBlogForAdmin
 } = require('../controllers/blogController'); 
 const { protect, adminOnly } = require('../middleware/authMiddleware'); 
-const { validateBlog } = require('../middleware/validationMiddleware'); 
+const { validateBlog, validateUpdateBlog } = require('../middleware/validationMiddleware'); 
 const { uploadToCloudinary } = require('../middleware/uploadMiddleware');
 
 
@@ -50,6 +50,7 @@ router.patch(
   '/admin/blog/:id',
   protect,
   adminOnly,
+  validateUpdateBlog,
   uploadToCloudinary('image'), // optional image update
   updateBlog
 );

@@ -12,7 +12,7 @@ const {
 
 const { protect, adminOnly } = require('../middleware/authMiddleware'); // path to protect.js
 const { uploadToCloudinary } = require('../middleware/uploadMiddleware');
-const { validateCourse } = require('../middleware/validationMiddleware'); 
+const { validateCourse,validateUpdateCourse } = require('../middleware/validationMiddleware'); 
 
 // =======================
 // PUBLIC ROUTES
@@ -50,6 +50,7 @@ router.patch(
   '/admin/courses/:id',
   protect,
   adminOnly,
+  validateUpdateCourse,
   uploadToCloudinary('image'), // optional image update
   updateCourse
 );

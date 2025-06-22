@@ -12,7 +12,7 @@ const {
 } = require("../controllers/eventController");
 
 const { protect, adminOnly } = require("../middleware/authMiddleware");
-const { validateEvent } = require("../middleware/validationMiddleware"); // Assuming you have a validation middleware for events
+const { validateEvent, validateUpdateEvent } = require("../middleware/validationMiddleware"); // Assuming you have a validation middleware for events
 const { uploadToCloudinary } = require("../middleware/uploadMiddleware");
 
 // =========================
@@ -39,8 +39,8 @@ router.post(
   "/admin/events",
   protect,
   adminOnly,
-  uploadToCloudinary("image"),
   validateEvent,
+  uploadToCloudinary("image"),
   createEvent
 );
 
@@ -49,6 +49,7 @@ router.patch(
   "/admin/events/:id",
   protect,
   adminOnly,
+  validateUpdateEvent,
   uploadToCloudinary("image"),
   updateEvent
 );
