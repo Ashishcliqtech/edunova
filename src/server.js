@@ -17,10 +17,17 @@ const xss = require("xss-clean");
 const config = require("./config/config");
 const { errorHandler, notFound } = require("./middleware/errorMiddleware");
 const authRoutes = require("./routes/authRoutes");
+<<<<<<< HEAD
 const courseRoutes = require("./routes/courseRoutes");
 const eventRoutes = require("./routes/eventRoutes");
 const enquiryRoutes = require("./routes/enquiryRoutes");
 const testimonialRoutes = require("./routes/testimonialRoutes");
+=======
+const courseRoutes = require('./routes/courseRoutes');
+const eventRoutes = require('./routes/eventRoutes');
+const blogRoutes = require('./routes/blogRoutes');
+const certificateRoutes = require('./routes/certificateRoutes');
+>>>>>>> main
 const cookieParser = require("cookie-parser"); // Import cookie-parser
 
 const logger = require("./utils/logger");
@@ -33,7 +40,8 @@ app.use(cors());
 app.use(compression());
 app.use(mongoSanitize());
 app.use(xss());
-app.use(cookieParser()); // Add this line!
+app.use(cookieParser());
+
 
 // Expose custom headers to client JavaScript
 app.use((req, res, next) => {
@@ -96,6 +104,7 @@ app.get("/", (req, res) => {
 });
 // Routes
 app.use("/api/v1/auth", authRoutes);
+<<<<<<< HEAD
 app.use("/api/v1", courseRoutes);
 app.use("/api/v1", eventRoutes);
 app.use("/api/v1/", enquiryRoutes);
@@ -104,6 +113,17 @@ app.use("/api/v1/", testimonialRoutes);
 // Error handling middleware
 app.use(notFound);
 -app.use(errorHandler);
+=======
+app.use('/api/v1', courseRoutes);
+app.use('/api/v1', eventRoutes);
+app.use('/api/v1', blogRoutes);
+app.use('/api/v1', certificateRoutes);
+
+
+// Error handling middleware
+app.all('*', notFound);
+app.use(errorHandler);
+>>>>>>> main
 
 const PORT = config.PORT || 3000;
 

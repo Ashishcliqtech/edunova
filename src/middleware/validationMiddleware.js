@@ -1,5 +1,6 @@
 const { body, param, validationResult } = require("express-validator");
 const { AppError } = require("../utils/errorUtils");
+const { ERROR_MESSAGES } = require("../utils/constant/Messages");
 
 const handleValidationErrors = (req, res, next) => {
   const errors = validationResult(req);
@@ -187,6 +188,7 @@ const validateEvent = [
   handleValidationErrors,
 ];
 
+
 const validateObjectId = [
   param("id").isMongoId().withMessage("Invalid ID format"),
   handleValidationErrors,
@@ -202,6 +204,4 @@ module.exports = {
   validateSendOtp,
   validateChangePasswordDto,
   resetPasswordDto,
-  validateEnquiryDto,
-  validateTestimonialDto,
 };
