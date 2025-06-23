@@ -33,10 +33,10 @@ const pdfFileFilter = (req, file, cb) => {
 
 // --- Multer Instances ---
 const imageMulterUpload = multer({
-  storage: storage,
-  fileFilter: imageFileFilter,
+  storage: storage, 
+  fileFilter: imageFileFilter, 
   limits: {
-    fileSize: 5 * 1024 * 1024 // 5MB limit for images
+    fileSize: 2 * 1024 * 1024 // 2 MB (in bytes) - Aim for smaller originals
   }
 });
 
