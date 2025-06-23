@@ -12,24 +12,16 @@ const SendGridService = require("../utils/sendgrid/SendGridService");
 const redis = require("../utils/redisClient/redisclient");
 const config = require("../config/config");
 
-// Utility function to generate a 6-digit OTP
 const generateOTP = () =>
   Math.floor(100000 + Math.random() * 900000).toString();
 
-// Utility function to extract refresh token from request cookies
 const getRefreshTokenFromCookie = (req) =>
   req.cookies ? req.cookies.refreshToken : null;
 
-// Handles user signup by storing data in Redis and sending OTP for verification
-// @param {Object} req - Express request object containing name, email, and password in body
-// @param {Object} res - Express response object
-// @param {Function} next - Express next middleware function
-// @returns {Object} JSON response with success message
 const signup = catchAsync(async (req, res, next) => {
   try {
     const { name, email, password } = req.body;
 
-    // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       if (!existingUser.isVerified) {
@@ -45,7 +37,6 @@ const signup = catchAsync(async (req, res, next) => {
       );
     }
 
-    // Generate OTP and check for existing OTP in Redis
     const otp = generateOTP();
     const redisKey = `signup:${email.toLowerCase()}`;
     const existingOtp = await redis.get(redisKey);
@@ -55,11 +46,9 @@ const signup = catchAsync(async (req, res, next) => {
       );
     }
 
-    // Store user data temporarily in Redis with 10-minute expiry
     const redisData = { name, email, password, role: "user", otp };
     await redis.set(redisKey, JSON.stringify(redisData), { ex: 600 });
 
-    // Send OTP via email
     await SendGridService.sendOtp(name, email, otp);
 
     return successResponse(res, 201, "OTP sent to your email. Please verify.");
@@ -71,18 +60,12 @@ const signup = catchAsync(async (req, res, next) => {
   }
 });
 
-// Verifies OTP and creates a new user account
-// @param {Object} req - Express request object containing email and otp in body
-// @param {Object} res - Express response object
-// @param {Function} next - Express next middleware function
-// @returns {Object} JSON response with tokens and user data
 const verifyOtp = catchAsync(async (req, res, next) => {
   try {
     const { email, otp } = req.body;
     const redisKey = `signup:${email.toLowerCase()}`;
     const userDataJson = await redis.get(redisKey);
 
-    // Check if signup session exists
     if (!userDataJson) {
       return next(
         new AppError(
@@ -97,7 +80,6 @@ const verifyOtp = catchAsync(async (req, res, next) => {
       return next(new AppError("Invalid OTP", 400));
     }
 
-    // Create new user in database
     const newUser = await User.create({
       name: parsedUserData.name,
       email: parsedUserData.email,
@@ -107,14 +89,12 @@ const verifyOtp = catchAsync(async (req, res, next) => {
       isActive: true,
     });
 
-    // Generate tokens and store refresh token
     const accessToken = generateAccessToken(newUser._id, newUser.role);
     const refreshToken = generateRefreshToken();
     await newUser.setRefreshToken(refreshToken);
     newUser.lastLogin = new Date();
     await newUser.save({ validateBeforeSave: false });
 
-    // Clean up Redis
     await redis.del(redisKey);
 
     // Set custom headers
@@ -131,11 +111,6 @@ const verifyOtp = catchAsync(async (req, res, next) => {
   }
 });
 
-// Authenticates user and generates access and refresh tokens
-// @param {Object} req - Express request object containing email and password in body
-// @param {Object} res - Express response object
-// @param {Function} next - Express next middleware function
-// @returns {Object} JSON response with tokens and user data
 const login = catchAsync(async (req, res, next) => {
   try {
     const { email, password } = req.body;
@@ -187,11 +162,6 @@ const login = catchAsync(async (req, res, next) => {
   }
 });
 
-// Logs out user by clearing tokens and blacklisting access token
-// @param {Object} req - Express request object with authorization header and cookies
-// @param {Object} res - Express response object
-// @param {Function} next - Express next middleware function
-// @returns {Object} JSON response with success message
 const logout = catchAsync(async (req, res, next) => {
   const accessToken = req.headers.authorization.split(" ")[1];
   const refreshTokenFromCookie = getRefreshTokenFromCookie(req);
@@ -230,11 +200,6 @@ const logout = catchAsync(async (req, res, next) => {
   }
 });
 
-// Refreshes access token using a valid refresh token
-// @param {Object} req - Express request object with refresh token in cookies
-// @param {Object} res - Express response object
-// @param {Function} next - Express next middleware function
-// @returns {Object} JSON response with new tokens
 const refreshAccessToken = catchAsync(async (req, res, next) => {
   const refreshToken = getRefreshTokenFromCookie(req);
 
@@ -280,11 +245,6 @@ const refreshAccessToken = catchAsync(async (req, res, next) => {
   }
 });
 
-// Initiates password reset by sending OTP to user's email
-// @param {Object} req - Express request object containing email in body
-// @param {Object} res - Express response object
-// @param {Function} next - Express next middleware function
-// @returns {Object} JSON response with success message
 const forgotPassword = catchAsync(async (req, res, next) => {
   try {
     const { email } = req.body;
@@ -324,11 +284,6 @@ const forgotPassword = catchAsync(async (req, res, next) => {
   }
 });
 
-// Verifies OTP for password reset
-// @param {Object} req - Express request object containing email and otp in body
-// @param {Object} res - Express response object
-// @param {Function} next - Express next middleware function
-// @returns {Object} JSON response with success message
 const verifyForgotOtp = catchAsync(async (req, res, next) => {
   try {
     const { email, otp } = req.body;
@@ -360,11 +315,6 @@ const verifyForgotOtp = catchAsync(async (req, res, next) => {
   }
 });
 
-// Resets user password after OTP verification
-// @param {Object} req - Express request object containing email, newPassword, and confirmPassword in body
-// @param {Object} res - Express response object
-// @param {Function} next - Express next middleware function
-// @returns {Object} JSON response with success message
 const resetPassword = catchAsync(async (req, res, next) => {
   try {
     const { email, newPassword, confirmPassword } = req.body;
@@ -406,11 +356,6 @@ const resetPassword = catchAsync(async (req, res, next) => {
   }
 });
 
-// Changes password for an authenticated user
-// @param {Object} req - Express request object containing currentPassword, newPassword, and confirmPassword in body
-// @param {Object} res - Express response object
-// @param {Function} next - Express next middleware function
-// @returns {Object} JSON response with success message
 const changePassword = catchAsync(async (req, res, next) => {
   try {
     const userId = req.user.id;
@@ -439,11 +384,6 @@ const changePassword = catchAsync(async (req, res, next) => {
   }
 });
 
-// Sends OTP for general verification purposes
-// @param {Object} req - Express request object containing email in body
-// @param {Object} res - Express response object
-// @param {Function} next - Express next middleware function
-// @returns {Object} JSON response with success message
 const resendOtp = catchAsync(async (req, res, next) => {
   try {
     const { email } = req.body;
@@ -477,11 +417,6 @@ const resendOtp = catchAsync(async (req, res, next) => {
   }
 });
 
-// Retrieves data for the currently authenticated user
-// @param {Object} req - Express request object with user data in req.user
-// @param {Object} res - Express response object
-// @param {Function} next - Express next middleware function
-// @returns {Object} JSON response with user data
 const getMe = catchAsync(async (req, res, next) => {
   const user = await User.findById(req.user.id).select(
     "-password -refreshToken"

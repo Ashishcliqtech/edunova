@@ -10,9 +10,9 @@ const {
   getCourseById,
 } = require('../controllers/courseController');
 
-const { protect, adminOnly } = require('../middleware/authMiddleware'); // path to protect.js
+const { protect, adminOnly } = require('../middleware/authMiddleware'); 
 const { uploadToCloudinary } = require('../middleware/uploadMiddleware');
-const { validateCourse } = require('../middleware/validationMiddleware'); // Assuming you have a validation middleware for courses
+const { validateCourse } = require('../middleware/validationMiddleware'); 
 
 // =======================
 // PUBLIC ROUTES

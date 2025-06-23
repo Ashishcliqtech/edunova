@@ -17,8 +17,10 @@ const xss = require("xss-clean");
 const config = require("./config/config");
 const { errorHandler, notFound } = require("./middleware/errorMiddleware");
 const authRoutes = require("./routes/authRoutes");
-const courseRoutes = require('./routes/courseRoutes');
-const eventRoutes = require('./routes/eventRoutes');
+const courseRoutes = require("./routes/courseRoutes");
+const eventRoutes = require("./routes/eventRoutes");
+const enquiryRoutes = require("./routes/enquiryRoutes");
+const testimonialRoutes = require("./routes/testimonialRoutes");
 const cookieParser = require("cookie-parser"); // Import cookie-parser
 
 const logger = require("./utils/logger");
@@ -41,7 +43,6 @@ app.use((req, res, next) => {
   );
   next();
 });
-
 
 // Rate limiting
 const limiter = rateLimit({
@@ -95,12 +96,14 @@ app.get("/", (req, res) => {
 });
 // Routes
 app.use("/api/v1/auth", authRoutes);
-app.use('/api/v1', courseRoutes);
-app.use('/api/v1', eventRoutes);
+app.use("/api/v1", courseRoutes);
+app.use("/api/v1", eventRoutes);
+app.use("/api/v1/", enquiryRoutes);
+app.use("/api/v1/", testimonialRoutes);
 
 // Error handling middleware
 app.use(notFound);
-app.use(errorHandler);
+-app.use(errorHandler);
 
 const PORT = config.PORT || 3000;
 
