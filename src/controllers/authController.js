@@ -12,19 +12,12 @@ const SendGridService = require("../utils/sendgrid/SendGridService");
 const redis = require("../utils/redisClient/redisclient");
 const config = require("../config/config");
 
-// Utility function to generate a 6-digit OTP
 const generateOTP = () =>
   Math.floor(100000 + Math.random() * 900000).toString();
 
-// Utility function to extract refresh token from request cookies
 const getRefreshTokenFromCookie = (req) =>
   req.cookies ? req.cookies.refreshToken : null;
 
-// Handles user signup by storing data in Redis and sending OTP for verification
-// @param {Object} req - Express request object containing name, email, and password in body
-// @param {Object} res - Express response object
-// @param {Function} next - Express next middleware function
-// @returns {Object} JSON response with success message
 const signup = catchAsync(async (req, res, next) => {
   try {
     const { name, email, password } = req.body;
@@ -45,7 +38,6 @@ const signup = catchAsync(async (req, res, next) => {
       );
     }
 
-    // Generate OTP and check for existing OTP in Redis
     const otp = generateOTP();
     const redisKey = `signup:${email.toLowerCase()}`;
     const existingOtp = await redis.get(redisKey);
@@ -55,7 +47,6 @@ const signup = catchAsync(async (req, res, next) => {
       );
     }
 
-    // Store user data temporarily in Redis with 10-minute expiry
     const redisData = { name, email, password, role: "user", otp };
     await redis.set(redisKey, JSON.stringify(redisData), { ex: 600 });
 
@@ -71,11 +62,6 @@ const signup = catchAsync(async (req, res, next) => {
   }
 });
 
-// Verifies OTP and creates a new user account
-// @param {Object} req - Express request object containing email and otp in body
-// @param {Object} res - Express response object
-// @param {Function} next - Express next middleware function
-// @returns {Object} JSON response with tokens and user data
 const verifyOtp = catchAsync(async (req, res, next) => {
   try {
     const { email, otp } = req.body;
@@ -107,17 +93,14 @@ const verifyOtp = catchAsync(async (req, res, next) => {
       isActive: true,
     });
 
-    // Generate tokens and store refresh token
     const accessToken = generateAccessToken(newUser._id, newUser.role);
     const refreshToken = generateRefreshToken();
     await newUser.setRefreshToken(refreshToken);
     newUser.lastLogin = new Date();
     await newUser.save({ validateBeforeSave: false });
 
-    // Clean up Redis
     await redis.del(redisKey);
 
-    // Set custom headers
     res.setHeader("x-access-token", accessToken);
     res.setHeader("x-user-id", newUser._id.toString());
     res.setHeader("x-user-role", newUser.role);
@@ -131,21 +114,14 @@ const verifyOtp = catchAsync(async (req, res, next) => {
   }
 });
 
-// Authenticates user and generates access and refresh tokens
-// @param {Object} req - Express request object containing email and password in body
-// @param {Object} res - Express response object
-// @param {Function} next - Express next middleware function
-// @returns {Object} JSON response with tokens and user data
 const login = catchAsync(async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
-    // Validate input
     if (!email || !password) {
       return next(new AppError("Please provide an email and password", 400));
     }
 
-    // Fetch user with password and refresh token
     const user = await User.findOne({ email }).select(
       "+password +refreshToken"
     );
@@ -154,7 +130,6 @@ const login = catchAsync(async (req, res, next) => {
       return next(new AppError("Invalid email or password", 401));
     }
 
-    // Check account status
     if (!user.isActive) {
       return next(
         new AppError(
@@ -167,14 +142,12 @@ const login = catchAsync(async (req, res, next) => {
       return next(new AppError("Please verify your email to login.", 403));
     }
 
-    // Generate tokens and update user
     const accessToken = generateAccessToken(user._id, user.role);
     const refreshToken = generateRefreshToken();
     await user.setRefreshToken(refreshToken);
     user.lastLogin = new Date();
     await user.save({ validateBeforeSave: false });
 
-    // Set custom headers
     res.setHeader("x-access-token", accessToken);
     res.setHeader("x-user-id", user._id.toString());
     res.setHeader("x-user-role", user.role);
@@ -187,17 +160,11 @@ const login = catchAsync(async (req, res, next) => {
   }
 });
 
-// Logs out user by clearing tokens and blacklisting access token
-// @param {Object} req - Express request object with authorization header and cookies
-// @param {Object} res - Express response object
-// @param {Function} next - Express next middleware function
-// @returns {Object} JSON response with success message
 const logout = catchAsync(async (req, res, next) => {
   const accessToken = req.headers.authorization.split(" ")[1];
   const refreshTokenFromCookie = getRefreshTokenFromCookie(req);
 
   try {
-    // Blacklist access token in Redis
     const decodedAccessToken = verifyAccessToken(accessToken);
     const expiresInSeconds =
       decodedAccessToken.exp - Math.floor(Date.now() / 1000);
@@ -207,14 +174,12 @@ const logout = catchAsync(async (req, res, next) => {
       });
     }
 
-    // Clear refresh token from user
     const user = await User.findById(req.user.id).select("+refreshToken");
     if (user && user.refreshToken === refreshTokenFromCookie) {
       await user.clearRefreshToken();
       await user.save({ validateBeforeSave: false });
     }
 
-    // Clear refresh token cookie
     res.clearCookie("refreshToken", {
       httpOnly: true,
       secure: config.NODE_ENV === "production",
@@ -230,11 +195,6 @@ const logout = catchAsync(async (req, res, next) => {
   }
 });
 
-// Refreshes access token using a valid refresh token
-// @param {Object} req - Express request object with refresh token in cookies
-// @param {Object} res - Express response object
-// @param {Function} next - Express next middleware function
-// @returns {Object} JSON response with new tokens
 const refreshAccessToken = catchAsync(async (req, res, next) => {
   const refreshToken = getRefreshTokenFromCookie(req);
 
@@ -248,7 +208,6 @@ const refreshAccessToken = catchAsync(async (req, res, next) => {
   }
 
   try {
-    // Verify refresh token and user
     const user = await User.findOne({ refreshToken }).select("+refreshToken");
     if (!user || user.refreshToken !== refreshToken) {
       return next(
@@ -279,7 +238,6 @@ const refreshAccessToken = catchAsync(async (req, res, next) => {
     );
   }
 });
-
 
 const forgotPassword = catchAsync(async (req, res, next) => {
   try {
@@ -320,11 +278,6 @@ const forgotPassword = catchAsync(async (req, res, next) => {
   }
 });
 
-// Verifies OTP for password reset
-// @param {Object} req - Express request object containing email and otp in body
-// @param {Object} res - Express response object
-// @param {Function} next - Express next middleware function
-// @returns {Object} JSON response with success message
 const verifyForgotOtp = catchAsync(async (req, res, next) => {
   try {
     const { email, otp } = req.body;
@@ -356,11 +309,6 @@ const verifyForgotOtp = catchAsync(async (req, res, next) => {
   }
 });
 
-// Resets user password after OTP verification
-// @param {Object} req - Express request object containing email, newPassword, and confirmPassword in body
-// @param {Object} res - Express response object
-// @param {Function} next - Express next middleware function
-// @returns {Object} JSON response with success message
 const resetPassword = catchAsync(async (req, res, next) => {
   try {
     const { email, newPassword, confirmPassword } = req.body;
@@ -402,11 +350,6 @@ const resetPassword = catchAsync(async (req, res, next) => {
   }
 });
 
-// Changes password for an authenticated user
-// @param {Object} req - Express request object containing currentPassword, newPassword, and confirmPassword in body
-// @param {Object} res - Express response object
-// @param {Function} next - Express next middleware function
-// @returns {Object} JSON response with success message
 const changePassword = catchAsync(async (req, res, next) => {
   try {
     const userId = req.user.id;
@@ -435,11 +378,6 @@ const changePassword = catchAsync(async (req, res, next) => {
   }
 });
 
-// Sends OTP for general verification purposes
-// @param {Object} req - Express request object containing email in body
-// @param {Object} res - Express response object
-// @param {Function} next - Express next middleware function
-// @returns {Object} JSON response with success message
 const resendOtp = catchAsync(async (req, res, next) => {
   try {
     const { email } = req.body;
@@ -473,11 +411,6 @@ const resendOtp = catchAsync(async (req, res, next) => {
   }
 });
 
-// Retrieves data for the currently authenticated user
-// @param {Object} req - Express request object with user data in req.user
-// @param {Object} res - Express response object
-// @param {Function} next - Express next middleware function
-// @returns {Object} JSON response with user data
 const getMe = catchAsync(async (req, res, next) => {
   const user = await User.findById(req.user.id).select(
     "-password -refreshToken"
