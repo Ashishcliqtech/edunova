@@ -1,5 +1,6 @@
 const Course = require('../models/Course');
 const { catchAsync, AppError } = require('../utils/errorUtils');
+const { ERROR_MESSAGES, SUCCESS_MESSAGES } = require('../utils/constant/Messages');
 
 // ============================
 // ADMIN: COURSE MANAGEMENT
@@ -13,6 +14,7 @@ const createCourse = catchAsync(async (req, res, next) => {
 
   res.status(201).json({
     success: true,
+    message: SUCCESS_MESSAGES.COURSE_CREATED,
     data: { course }
   });
 });
@@ -20,7 +22,7 @@ const createCourse = catchAsync(async (req, res, next) => {
 // PUT /api/admin/courses/:id
 const updateCourse = catchAsync(async (req, res, next) => {
   let course = await Course.findById(req.params.id);
-  if (!course) return next(new AppError('Course not found', 404));
+  if (!course) return next(new AppError(ERROR_MESSAGES.COURSE_NOT_FOUND, 404));
 
   const { title, description, image } = req.body;
   const updateData = { title, description };
@@ -33,6 +35,7 @@ const updateCourse = catchAsync(async (req, res, next) => {
 
   res.status(200).json({
     success: true,
+    message: SUCCESS_MESSAGES.COURSE_UPDATED,
     data: { course }
   });
 });
@@ -40,14 +43,14 @@ const updateCourse = catchAsync(async (req, res, next) => {
 // DELETE /api/admin/courses/:id (Soft Delete)
 const deleteCourse = catchAsync(async (req, res, next) => {
   const course = await Course.findById(req.params.id);
-  if (!course) return next(new AppError('Course not found', 404));
+  if (!course) return next(new AppError(ERROR_MESSAGES.COURSE_NOT_FOUND, 404));
 
   course.isActive = false;
   await course.save();
 
   res.status(200).json({
     success: true,
-    message: 'Course deleted successfully'
+    message: SUCCESS_MESSAGES.COURSE_DELETED
   });
 });
 
@@ -77,6 +80,7 @@ const getUserCourses = catchAsync(async (req, res, next) => {
 
   res.status(200).json({
     success: true,
+    message: SUCCESS_MESSAGES.COURSE_FETCHED,
     count: courses.length,
     total,
     currentPage: page,
@@ -114,6 +118,7 @@ const getAdminCourses = catchAsync(async (req, res, next) => {
 
   res.status(200).json({
     success: true,
+    message: SUCCESS_MESSAGES.COURSE_FETCHED,
     count: courses.length,
     total,
     currentPage: page,
@@ -128,11 +133,12 @@ const getAdminCourses = catchAsync(async (req, res, next) => {
 const getCourseById = catchAsync(async (req, res, next) => {
   const course = await Course.findById(req.params.id);
   if (!course || !course.isActive) {
-    return next(new AppError('Course not found', 404));
+    return next(new AppError(ERROR_MESSAGES.COURSE_NOT_FOUND, 404));
   }
 
   res.status(200).json({
     success: true,
+    message: SUCCESS_MESSAGES.COURSE_FETCHED,
     data: { course }
   });
 });

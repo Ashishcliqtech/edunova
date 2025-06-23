@@ -1,5 +1,6 @@
 const { body, param, validationResult } = require("express-validator");
 const { AppError } = require("../utils/errorUtils");
+const { ERROR_MESSAGES } = require("../utils/constant/Messages");
 
 const handleValidationErrors = (req, res, next) => {
   const errors = validationResult(req);
@@ -228,8 +229,15 @@ const validateUpdateBlog = [
   handleValidationErrors
 ];
 
+const validateCertificate = [
+  body("certificatePdf")
+    .notEmpty()
+    .withMessage("Certificate PDF is required")
+    .isURL()
+    .withMessage(ERROR_MESSAGES.PDF_UPLOAD_FAILED),
 
-
+  handleValidationErrors,
+];
 
 const validateObjectId = [
   param("id").isMongoId().withMessage("Invalid ID format"),
@@ -250,4 +258,5 @@ module.exports = {
   validateUpdateCourse,
   validateUpdateEvent,
   validateUpdateBlog,
+  validateCertificate,
 };

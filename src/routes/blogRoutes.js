@@ -9,7 +9,7 @@ const {
 } = require('../controllers/blogController'); 
 const { protect, adminOnly } = require('../middleware/authMiddleware'); 
 const { validateBlog, validateUpdateBlog } = require('../middleware/validationMiddleware'); 
-const { uploadToCloudinary } = require('../middleware/uploadMiddleware');
+const { uploadImageToCloudinary } = require('../middleware/uploadMiddleware');
 
 
 const router = express.Router();
@@ -40,8 +40,8 @@ router.post(
   '/admin/blog',
   protect,
   adminOnly,
+  uploadImageToCloudinary('image', 'blogs'),
   validateBlog, 
-  uploadToCloudinary('image'),
   createBlog
 );
 
@@ -50,8 +50,8 @@ router.patch(
   '/admin/blog/:id',
   protect,
   adminOnly,
-  validateUpdateBlog,
-  uploadToCloudinary('image'), // optional image update
+  uploadImageToCloudinary('image', 'blogs'),
+  validateUpdateBlog, 
   updateBlog
 );
 

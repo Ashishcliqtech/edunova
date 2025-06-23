@@ -1,6 +1,6 @@
 const Blog = require('../models/blogModel'); 
 const { AppError, catchAsync }  = require('../utils/errorUtils'); 
-
+const { ERROR_MESSAGES, SUCCESS_MESSAGES } = require('../utils/constant/Messages');
 
 
 // Create a new blog post
@@ -17,7 +17,8 @@ exports.createBlog = catchAsync(async (req, res, next) => {
   const newBlog = await Blog.create(req.body);
 
   res.status(201).json({
-    status: 'success',
+    success: true,
+    message: SUCCESS_MESSAGES.BLOG_CREATED,
     data: {
       blog: newBlog
     }
@@ -32,7 +33,8 @@ exports.getAllBlogs = catchAsync(async (req, res, next) => {
   });
 
   res.status(200).json({
-    status: 'success',
+    success: true,
+    message: SUCCESS_MESSAGES.BLOG_FETCHED,
     results: blogs.length,
     data: {
       blogs
@@ -49,7 +51,8 @@ exports.getAllBlogForAdmin = catchAsync(async (req, res, next) => {
   });
 
   res.status(200).json({
-    status: 'success',
+    success: true,
+    message: SUCCESS_MESSAGES.BLOG_FETCHED,
     results: blogs.length,
     data: {
       blogs: blogs // Changed from courses to blogs
@@ -65,11 +68,12 @@ exports.getBlogbyId = catchAsync(async (req, res, next) => {
   });
 
   if (!blog) {
-    return next(new AppError('No blog found with that ID', 404));
+    return next(new AppError(ERROR_MESSAGES.BLOG_NOT_FOUND, 404));
   }
 
   res.status(200).json({
-    status: 'success',
+    success: true,
+    message: SUCCESS_MESSAGES.BLOG_FETCHED,
     data: {
       blog
     }
@@ -80,7 +84,7 @@ exports.getBlogbyId = catchAsync(async (req, res, next) => {
 exports.updateBlog = catchAsync(async (req, res, next) => {
   // Prevent direct update of createdBy field
   if (req.body.createdBy) {
-    return next(new AppError('You cannot change the creator of a blog post', 400));
+    return next(new AppError(ERROR_MESSAGES.BLOG_UPDATE_FORBIDDEN, 400));
   }
 
   const blog = await Blog.findOneAndUpdate({ _id: req.params.id, createdBy: req.user.id }, req.body, {
@@ -89,11 +93,12 @@ exports.updateBlog = catchAsync(async (req, res, next) => {
   });
 
   if (!blog) {
-    return next(new AppError('No blog found with that ID or you do not have permission to update it.', 404));
+    return next(new AppError(ERROR_MESSAGES.BLOG_NOT_FOUND, 404));
   }
 
   res.status(200).json({
-    status: 'success',
+    success: true,
+    message: SUCCESS_MESSAGES.BLOG_UPDATED,
     data: {
       blog
     }
@@ -107,11 +112,12 @@ exports.deleteBlog = catchAsync(async (req, res, next) => {
   });
 
   if (!blog) {
-    return next(new AppError('No blog found with that ID or you do not have permission to delete it.', 404));
+    return next(new AppError(ERROR_MESSAGES.BLOG_NOT_FOUND, 404));
   }
 
-  res.status(204).json({ // 204 No Content for successful deletion
-    status: 'success',
+  res.status(200).json({
+    success: true,
+    message: SUCCESS_MESSAGES.BLOG_DELETED,
     data: null
   });
 });

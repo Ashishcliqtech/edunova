@@ -1,6 +1,7 @@
 const Event = require('../models/Event');
 const { catchAsync, AppError } = require('../utils/errorUtils');
 const PhonePeService = require('../utils/phonepe/PhonePeService');
+const { ERROR_MESSAGES, SUCCESS_MESSAGES } = require('../utils/constant/Messages');
 
 
 // ============================
@@ -22,6 +23,7 @@ const createEvent = catchAsync(async (req, res, next) => {
 
   res.status(201).json({
     success: true,
+    message: SUCCESS_MESSAGES.EVENT_CREATED,
     data: { event }
   });
 });
@@ -29,7 +31,7 @@ const createEvent = catchAsync(async (req, res, next) => {
 // PUT /api/v1/admin/events/:id
 const updateEvent = catchAsync(async (req, res, next) => {
   let event = await Event.findById(req.params.id);
-  if (!event) return next(new AppError('Event not found', 404));
+  if (!event) return next(new AppError(ERROR_MESSAGES.EVENT_NOT_FOUND, 404));
 
   const { title, description, price, paymentUrl, image } = req.body;
   const updateData = {
@@ -47,6 +49,7 @@ const updateEvent = catchAsync(async (req, res, next) => {
 
   res.status(200).json({
     success: true,
+    message: SUCCESS_MESSAGES.EVENT_UPDATED,
     data: { event }
   });
 });
@@ -54,17 +57,16 @@ const updateEvent = catchAsync(async (req, res, next) => {
 // DELETE /api/v1/admin/events/:id (Soft Delete)
 const deleteEvent = catchAsync(async (req, res, next) => {
   const event = await Event.findById(req.params.id);
-  if (!event) return next(new AppError('Event not found', 404));
+  if (!event) return next(new AppError(ERROR_MESSAGES.EVENT_NOT_FOUND, 404));
 
   event.isActive = false;
   await event.save();
 
   res.status(200).json({
     success: true,
-    message: 'Event deleted successfully'
+    message: SUCCESS_MESSAGES.EVENT_DELETED
   });
 });
-
 
 // GET /api/v1/events
 const getUserEvents = catchAsync(async (req, res, next) => {
@@ -94,6 +96,7 @@ const getUserEvents = catchAsync(async (req, res, next) => {
 
   res.status(200).json({
     success: true,
+    message: SUCCESS_MESSAGES.EVENT_FETCHED,
     count: events.length,
     total,
     currentPage: page,
@@ -131,6 +134,7 @@ const getAdminEvents = catchAsync(async (req, res, next) => {
 
   res.status(200).json({
     success: true,
+    message: SUCCESS_MESSAGES.EVENT_FETCHED,
     count: events.length,
     total,
     currentPage: page,
@@ -143,11 +147,12 @@ const getAdminEvents = catchAsync(async (req, res, next) => {
 const getEventById = catchAsync(async (req, res, next) => {
   const event = await Event.findById(req.params.id);
   if (!event || !event.isActive) {
-    return next(new AppError('Event not found', 404));
+    return next(new AppError(ERROR_MESSAGES.EVENT_NOT_FOUND, 404));
   }
 
   res.status(200).json({
     success: true,
+    message: SUCCESS_MESSAGES.EVENT_FETCHED,
     data: { event }
   });
 });
@@ -157,17 +162,17 @@ const enrollInEvent = catchAsync(async (req, res, next) => {
   const event = await Event.findById(req.params.id);
 
   if (!event || !event.isActive) {
-    return next(new AppError('Event not found', 404));
+    return next(new AppError(ERROR_MESSAGES.EVENT_NOT_FOUND, 404));
   }
 
   if (!event.paymentUrl) {
-    return next(new AppError('Payment URL not available for this event', 400));
+    return next(new AppError("Payment URL not available for this event", 400));
   }
   
   res.status(200).json({
     success: true,
     paymentUrl: event.paymentUrl,
-    message: 'Redirect to payment URL',
+    message: "Redirect to payment URL",
   });
 });
 
