@@ -12,8 +12,8 @@ const {
 } = require("../controllers/eventController");
 
 const { protect, adminOnly } = require("../middleware/authMiddleware");
-const { validateEvent } = require("../middleware/validationMiddleware"); // Assuming you have a validation middleware for events
-const { uploadToCloudinary } = require("../middleware/uploadMiddleware");
+const { validateEvent, validateUpdateEvent } = require("../middleware/validationMiddleware"); // Assuming you have a validation middleware for events
+const { uploadImageToCloudinary } = require("../middleware/uploadMiddleware");
 
 // =========================
 // PUBLIC & USER ROUTES
@@ -39,21 +39,27 @@ router.post(
   "/admin/events",
   protect,
   adminOnly,
-  uploadToCloudinary("image"),
+  uploadImageToCloudinary('image', 'events'),
   validateEvent,
   createEvent
 );
 
-// PUT /api/v1/admin/events/:id - Update event
-router.put(
+// Patch /api/v1/admin/events/:id - Update event
+router.patch(
   "/admin/events/:id",
   protect,
   adminOnly,
-  uploadToCloudinary("image"),
+  uploadImageToCloudinary('image', 'events'),
+  validateUpdateEvent,
   updateEvent
 );
 
 // DELETE /api/v1/admin/events/:id - Soft delete
-router.delete("/admin/events/:id", protect, adminOnly, deleteEvent);
+router.delete(
+  "/admin/events/:id", 
+  protect, 
+  adminOnly, 
+  deleteEvent
+);
 
 module.exports = router;

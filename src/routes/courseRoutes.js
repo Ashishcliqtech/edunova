@@ -11,8 +11,8 @@ const {
 } = require('../controllers/courseController');
 
 const { protect, adminOnly } = require('../middleware/authMiddleware'); // path to protect.js
-const { uploadToCloudinary } = require('../middleware/uploadMiddleware');
-const { validateCourse } = require('../middleware/validationMiddleware'); // Assuming you have a validation middleware for courses
+const { uploadImageToCloudinary } = require('../middleware/uploadMiddleware');
+const { validateCourse,validateUpdateCourse } = require('../middleware/validationMiddleware'); 
 
 // =======================
 // PUBLIC ROUTES
@@ -40,19 +40,22 @@ router.post(
   '/admin/courses',
   protect,
   adminOnly,
-  validateCourse, 
-  uploadToCloudinary('image'),
+  uploadImageToCloudinary('image', 'courses'), // <-- THIS MUST COME FIRST TO PARSE form-data
+  validateCourse, // <-- NOW validateCourse can access correctly parsed req.body
   createCourse
 );
 
-// PUT /api/v1/admin/courses/:id - Admin Only
-router.put(
+// patch /api/v1/admin/courses/:id - Admin Only
+router.patch(
   '/admin/courses/:id',
   protect,
   adminOnly,
-  uploadToCloudinary('image'), // optional image update
+  // For PATCH, if image update is optional, Multer's `handleCloudinaryUpload` correctly handles `!req.file`.
+  uploadImageToCloudinary('image', 'courses'), // <-- RUN MULTER/CLOUDINARY FIRST
+  validateUpdateCourse, // <-- THEN RUN VALIDATION
   updateCourse
 );
+
 
 // DELETE /api/v1/admin/courses/:id - Admin Only
 router.delete(

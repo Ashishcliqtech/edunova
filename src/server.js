@@ -19,6 +19,8 @@ const { errorHandler, notFound } = require("./middleware/errorMiddleware");
 const authRoutes = require("./routes/authRoutes");
 const courseRoutes = require('./routes/courseRoutes');
 const eventRoutes = require('./routes/eventRoutes');
+const blogRoutes = require('./routes/blogRoutes');
+const certificateRoutes = require('./routes/certificateRoutes');
 const cookieParser = require("cookie-parser"); // Import cookie-parser
 
 const logger = require("./utils/logger");
@@ -31,7 +33,8 @@ app.use(cors());
 app.use(compression());
 app.use(mongoSanitize());
 app.use(xss());
-app.use(cookieParser()); // Add this line!
+app.use(cookieParser());
+
 
 // Expose custom headers to client JavaScript
 app.use((req, res, next) => {
@@ -97,9 +100,12 @@ app.get("/", (req, res) => {
 app.use("/api/v1/auth", authRoutes);
 app.use('/api/v1', courseRoutes);
 app.use('/api/v1', eventRoutes);
+app.use('/api/v1', blogRoutes);
+app.use('/api/v1', certificateRoutes);
+
 
 // Error handling middleware
-app.use(notFound);
+app.all('*', notFound);
 app.use(errorHandler);
 
 const PORT = config.PORT || 3000;

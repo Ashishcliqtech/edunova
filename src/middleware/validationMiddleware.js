@@ -1,5 +1,6 @@
 const { body, param, validationResult } = require("express-validator");
 const { AppError } = require("../utils/errorUtils");
+const { ERROR_MESSAGES } = require("../utils/constant/Messages");
 
 const handleValidationErrors = (req, res, next) => {
   const errors = validationResult(req);
@@ -144,6 +145,99 @@ const validateEvent = [
   handleValidationErrors,
 ];
 
+const validateBlog = [
+  body("title")
+    .trim()
+    .notEmpty().withMessage("Blog title is required")
+    .isLength({ min: 3, max: 200 })
+    .withMessage("Title must be between 3 and 200 characters long"),
+  
+  body("description")
+    .trim()
+    .notEmpty().withMessage("Blog description is required")
+    .isLength({ min: 50, max: 5000 })
+    .withMessage("Description must be between 50 and 5000 characters long"),
+  
+  body("image")
+    .trim()
+    .notEmpty().withMessage("Blog image is required")
+    .isURL().withMessage("Image URL must be a valid URL"), 
+
+  handleValidationErrors 
+];
+
+const validateUpdateCourse = [
+  body("title")
+    .optional() // Make title optional for updates
+    .trim()
+    .isLength({ min: 3, max: 100 })
+    .withMessage("Title must be between 3 and 100 characters"),
+  body("description")
+    .optional() // Make description optional for updates
+    .trim()
+    .isLength({ min: 10, max: 1000 })
+    .withMessage("Description must be between 10 and 1000 characters"),
+  body("image")
+    .optional() // Make image optional for updates (and checkFalsy if empty string is allowed)
+    .isURL()
+    .withMessage("Image must be a valid URL"),
+  handleValidationErrors,
+];
+
+const validateUpdateEvent = [
+  body("title")
+    .optional() // Make title optional for updates
+    .trim()
+    .isLength({ min: 3, max: 100 })
+    .withMessage("Title must be between 3 and 100 characters"),
+  body("description")
+    .optional() // Make description optional for updates
+    .trim()
+    .isLength({ min: 10, max: 1000 })
+    .withMessage("Description must be between 10 and 1000 characters"),
+  body("price")
+    .optional() // Make price optional for updates
+    .isFloat({ min: 0 })
+    .withMessage("Price must be a positive number"),
+  body("paymentUrl")
+    .optional() // Make paymentUrl optional for updates
+    .trim()
+    .isURL().withMessage("Payment URL must be a valid URL")
+    .isLength({ max: 500 }).withMessage("Payment URL cannot exceed 500 characters"),
+  body("image")
+    .optional({ checkFalsy: true }) // Allows field to be missing, null, or empty string for updates
+    .isURL().withMessage("Image URL must be a valid URL")
+    .isLength({ max: 500 }).withMessage("Image URL cannot exceed 500 characters"),
+  handleValidationErrors,
+];
+
+const validateUpdateBlog = [
+  body("title")
+    .optional() // Make title optional for updates
+    .trim()
+    .isLength({ min: 3, max: 200 })
+    .withMessage("Title must be between 3 and 200 characters long"),
+  body("description")
+    .optional() // Make description optional for updates
+    .trim()
+    .isLength({ min: 50, max: 5000 })
+    .withMessage("Description must be between 50 and 5000 characters long"),
+  body("image")
+    .optional() // Make image optional for updates
+    .trim()
+    .isURL().withMessage("Image URL must be a valid URL"),
+  handleValidationErrors
+];
+
+const validateCertificate = [
+  body("certificatePdf")
+    .notEmpty()
+    .withMessage("Certificate PDF is required")
+    .isURL()
+    .withMessage(ERROR_MESSAGES.PDF_UPLOAD_FAILED),
+
+  handleValidationErrors,
+];
 
 const validateObjectId = [
   param("id").isMongoId().withMessage("Invalid ID format"),
@@ -160,4 +254,9 @@ module.exports = {
   validateSendOtp,
   validateChangePasswordDto,
   resetPasswordDto,
+  validateBlog,
+  validateUpdateCourse,
+  validateUpdateEvent,
+  validateUpdateBlog,
+  validateCertificate,
 };

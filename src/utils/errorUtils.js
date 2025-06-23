@@ -1,4 +1,3 @@
-// ==================== SRC/UTILS/ERRORUTILS.JS ====================
 class AppError extends Error {
   constructor(message, statusCode, originalError= null) {
     super(message);
