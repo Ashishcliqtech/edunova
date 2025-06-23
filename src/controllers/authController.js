@@ -282,7 +282,8 @@ const refreshAccessToken = catchAsync(async (req, res, next) => {
 
 // Initiates password reset by sending OTP to user's email
 // @param {Object} req - Express request object containing email in body
-// @param {Object} res - Express response object
+// @param {Object} res - Express response obj
+// ect
 // @param {Function} next - Express next middleware function
 // @returns {Object} JSON response with success message
 const forgotPassword = catchAsync(async (req, res, next) => {

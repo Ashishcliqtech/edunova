@@ -1,6 +1,5 @@
 const Event = require('../models/Event');
 const { AppError } = require('../utils/errorUtils');
-const PhonePeService = require('../utils/phonepe/PhonePeService');
 const { ERROR_MESSAGES, SUCCESS_MESSAGES } = require('../utils/constant/Messages');
 
 
