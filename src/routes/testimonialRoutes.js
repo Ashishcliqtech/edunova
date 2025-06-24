@@ -14,10 +14,18 @@ const { protect, adminOnly } = require("../middleware/authMiddleware");
 
 router.post("/create-testimonial", validateTestimonialDto, createTestimonial);
 router.get("/get-testimonials", getAllTestimonials);
-router.post(
+router.delete(
   "/admin/delete-testimonial/:id",
   protect,
   adminOnly,
   deleteTestimonialById
+);
+
+router.patch(
+  "/admin/update-testimonial/:id",
+  protect,
+  adminOnly,
+  validateTestimonialDto,
+  createTestimonial
 );
 module.exports = router;

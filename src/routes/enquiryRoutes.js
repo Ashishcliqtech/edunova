@@ -27,5 +27,10 @@ router.get(
   adminOnly,
   getEnquiryByUserId
 );
-router.post("/admin/delete-enquiry/:eId", protect, adminOnly, deleteEnquiryById);
+router.patch(
+  "/admin/delete-enquiry/:eId",
+  protect,
+  adminOnly,
+  deleteEnquiryById
+);
 module.exports = router;
