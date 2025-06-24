@@ -1,4 +1,4 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
 
 const {
@@ -8,61 +8,53 @@ const {
   getUserCourses,
   getAdminCourses,
   getCourseById,
-} = require('../controllers/courseController');
+} = require("../controllers/courseController");
 
-const { protect, adminOnly } = require('../middleware/authMiddleware'); // path to protect.js
-const { uploadImageToCloudinary } = require('../middleware/uploadMiddleware');
-const { validateCourse,validateUpdateCourse } = require('../middleware/validationMiddleware'); 
+const { protect, adminOnly } = require("../middleware/authMiddleware"); // path to protect.js
+const { uploadImageToCloudinary } = require("../middleware/uploadMiddleware");
+const {
+  validateCourse,
+  validateUpdateCourse,
+} = require("../middleware/validationMiddleware");
 
 // =======================
 // PUBLIC ROUTES
 // =======================
 
-// GET /api/v1/courses 
-router.get('/courses', getUserCourses);
+// GET /api/v1/courses
+router.get("/courses", getUserCourses);
 
-// GET /api/v1/courses/:id 
-router.get('/courses/:id', getCourseById);
+// GET /api/v1/courses/:id
+router.get("/courses/:id", getCourseById);
 
 // =======================
 // ADMIN ROUTES
 // =======================
 
-
-router.get(
-  '/admin/courses-all',
-  protect,
-  adminOnly, 
-  getAdminCourses);
+router.get("/admin/courses-all", protect, adminOnly, getAdminCourses);
 
 // POST /api/v1/admin/courses - Admin Only
 router.post(
-  '/admin/courses',
+  "/admin/courses",
   protect,
   adminOnly,
-  uploadImageToCloudinary('image', 'courses'), // <-- THIS MUST COME FIRST TO PARSE form-data
+  uploadImageToCloudinary("image", "courses"), // <-- THIS MUST COME FIRST TO PARSE form-data
   validateCourse, // <-- NOW validateCourse can access correctly parsed req.body
   createCourse
 );
 
 // patch /api/v1/admin/courses/:id - Admin Only
 router.patch(
-  '/admin/courses/:id',
+  "/admin/courses/:id",
   protect,
   adminOnly,
   // For PATCH, if image update is optional, Multer's `handleCloudinaryUpload` correctly handles `!req.file`.
-  uploadImageToCloudinary('image', 'courses'), // <-- RUN MULTER/CLOUDINARY FIRST
+  uploadImageToCloudinary("image", "courses"), // <-- RUN MULTER/CLOUDINARY FIRST
   validateUpdateCourse, // <-- THEN RUN VALIDATION
   updateCourse
 );
 
-
 // DELETE /api/v1/admin/courses/:id - Admin Only
-router.delete(
-  '/admin/courses/:id',
-  protect,
-  adminOnly,
-  deleteCourse
-);
+router.patch("/admin/courses/:id", protect, adminOnly, deleteCourse);
 
 module.exports = router;
