@@ -65,8 +65,41 @@ const deleteTestimonialById = catchAsync(async (req, res, next) => {
   }
 });
 
+const updateTestimonialById = catchAsync(async (req, res, next) => {
+  try {
+    const testimonialId = req.params.id;
+    const { name, designation, message } = req.body;
+
+    if (!testimonialId) {
+      return next(new AppError("Testimonial ID is required", 400));
+    }
+
+    if (!name || !designation || !message) {
+      return next(new AppError("All fields are required!", 400));
+    }
+
+    const testimonial = await Testimonial.findByIdAndUpdate(
+      testimonialId,
+      { name, designation, message },
+      { isActive: true, new: true }
+    );
+
+    if (!testimonial) {
+      return next(new AppError("Testimonial not found", 404));
+    }
+
+    successResponse(res, 200, "Testimonial updated successfully", {
+      testimonial,
+    });
+  } catch (error) {
+    logger.error("Error updating testimonial:", error);
+    return next(new AppError("Failed to update testimonial", 500));
+  }
+});
+
 module.exports = {
   createTestimonial,
   getAllTestimonials,
   deleteTestimonialById,
+  updateTestimonialById,
 };

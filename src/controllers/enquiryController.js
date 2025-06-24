@@ -25,9 +25,7 @@ const createEnquiry = catchAsync(async (req, res, next) => {
     };
     await Enquiry.create(enquiryData);
 
-    return successResponse(res, 201, "Enquiry submitted successfully", {
-      enquiryData,
-    });
+    return successResponse(res, 201, "Enquiry submitted successfully");
   } catch (error) {
     logger.error("Error creating enquiry:", error);
     return next(new AppError("Failed to create enquiry", 500));
@@ -61,7 +59,7 @@ const getEnquiryByUserId = catchAsync(async (req, res, next) => {
       return next(new AppError("User ID is required", 400));
     }
 
-    const enquiriesByUser = await Enquiry.find({ userId })
+    const enquiriesByUser = await Enquiry.find({ userId, isActive: true })
       .sort({
         createdAt: -1,
       })
@@ -88,7 +86,11 @@ const deleteEnquiryById = catchAsync(async (req, res, next) => {
       return next(new AppError("Enquiry ID is required", 400));
     }
 
-    const enquiry = await Enquiry.findByIdAndDelete(enquiryId);
+    const enquiry = await Enquiry.findByIdAndUpdate(
+      enquiryId,
+      { isActive: false },
+      { new: true }
+    );
 
     if (!enquiry) {
       return next(new AppError("Enquiry not found", 404));
