@@ -122,48 +122,60 @@ const validateEvent = [
     .trim()
     .isLength({ min: 3, max: 100 })
     .withMessage("Title must be between 3 and 100 characters")
-    .notEmpty().withMessage("Event title is required"), // Added notEmpty for required field
+    .notEmpty()
+    .withMessage("Event title is required"), // Added notEmpty for required field
   body("description")
     .trim()
     .isLength({ min: 10, max: 1000 })
     .withMessage("Description must be between 10 and 1000 characters")
-    .notEmpty().withMessage("Event description is required"), // Added notEmpty for required field
+    .notEmpty()
+    .withMessage("Event description is required"), // Added notEmpty for required field
   body("price")
     .isFloat({ min: 0 })
     .withMessage("Price must be a positive number")
-    .notEmpty().withMessage("Event price is required"), // Added notEmpty for required field
+    .notEmpty()
+    .withMessage("Event price is required"), // Added notEmpty for required field
   body("paymentUrl")
     .trim()
-    .notEmpty().withMessage("Payment URL is required") // Required field
-    .isURL().withMessage("Payment URL must be a valid URL") // Basic URL validation
-    .isLength({ max: 500 }).withMessage("Payment URL cannot exceed 500 characters"),
+    .notEmpty()
+    .withMessage("Payment URL is required") // Required field
+    .isURL()
+    .withMessage("Payment URL must be a valid URL") // Basic URL validation
+    .isLength({ max: 500 })
+    .withMessage("Payment URL cannot exceed 500 characters"),
   body("image")
     .optional({ checkFalsy: true }) // Allows field to be missing or empty string/null
-    .isURL().withMessage("Image URL must be a valid URL") // Validate if present
-    .isLength({ max: 500 }).withMessage("Image URL cannot exceed 500 characters"),
-  
+    .isURL()
+    .withMessage("Image URL must be a valid URL") // Validate if present
+    .isLength({ max: 500 })
+    .withMessage("Image URL cannot exceed 500 characters"),
+
   handleValidationErrors,
 ];
 
 const validateBlog = [
   body("title")
     .trim()
-    .notEmpty().withMessage("Blog title is required")
+    .notEmpty()
+    .withMessage("Blog title is required")
     .isLength({ min: 3, max: 200 })
     .withMessage("Title must be between 3 and 200 characters long"),
-  
+
   body("description")
     .trim()
-    .notEmpty().withMessage("Blog description is required")
+    .notEmpty()
+    .withMessage("Blog description is required")
     .isLength({ min: 50, max: 5000 })
     .withMessage("Description must be between 50 and 5000 characters long"),
-  
+
   body("image")
     .trim()
-    .notEmpty().withMessage("Blog image is required")
-    .isURL().withMessage("Image URL must be a valid URL"), 
+    .notEmpty()
+    .withMessage("Blog image is required")
+    .isURL()
+    .withMessage("Image URL must be a valid URL"),
 
-  handleValidationErrors 
+  handleValidationErrors,
 ];
 
 const validateUpdateCourse = [
@@ -202,12 +214,16 @@ const validateUpdateEvent = [
   body("paymentUrl")
     .optional() // Make paymentUrl optional for updates
     .trim()
-    .isURL().withMessage("Payment URL must be a valid URL")
-    .isLength({ max: 500 }).withMessage("Payment URL cannot exceed 500 characters"),
+    .isURL()
+    .withMessage("Payment URL must be a valid URL")
+    .isLength({ max: 500 })
+    .withMessage("Payment URL cannot exceed 500 characters"),
   body("image")
     .optional({ checkFalsy: true }) // Allows field to be missing, null, or empty string for updates
-    .isURL().withMessage("Image URL must be a valid URL")
-    .isLength({ max: 500 }).withMessage("Image URL cannot exceed 500 characters"),
+    .isURL()
+    .withMessage("Image URL must be a valid URL")
+    .isLength({ max: 500 })
+    .withMessage("Image URL cannot exceed 500 characters"),
   handleValidationErrors,
 ];
 
@@ -225,8 +241,9 @@ const validateUpdateBlog = [
   body("image")
     .optional() // Make image optional for updates
     .trim()
-    .isURL().withMessage("Image URL must be a valid URL"),
-  handleValidationErrors
+    .isURL()
+    .withMessage("Image URL must be a valid URL"),
+  handleValidationErrors,
 ];
 
 const validateCertificate = [
@@ -241,6 +258,42 @@ const validateCertificate = [
 
 const validateObjectId = [
   param("id").isMongoId().withMessage("Invalid ID format"),
+  handleValidationErrors,
+];
+
+const validateEnquiryDto = [
+  body("fullName")
+    .trim()
+    .isLength({ min: 2, max: 50 })
+    .withMessage("Full Name must be between 2 and 50 characters"),
+  body("email")
+    .isEmail()
+    .normalizeEmail()
+    .withMessage("Please provide a valid email"),
+  body("phone")
+    .trim()
+    .matches(/^\+91\s\d{10}$/, "g")
+    .withMessage("Phone number must be in the format: +91 6203971817"),
+  body("message")
+    .trim()
+    .isLength({ min: 5, max: 2000 })
+    .withMessage("Message must be between 5 and 2000 characters"),
+  handleValidationErrors,
+];
+
+const validateTestimonialDto = [
+  body("name")
+    .trim()
+    .isLength({ min: 2, max: 50 })
+    .withMessage("Full Name must be between 2 and 50 characters"),
+  body("designation")
+    .trim()
+    .isLength({ min: 2, max: 50 })
+    .withMessage("Designation must be between 2 and 50 characters"),
+  body("message")
+    .trim()
+    .isLength({ min: 5, max: 2000 })
+    .withMessage("Message must be between 5 and 2000 characters"),
   handleValidationErrors,
 ];
 
@@ -259,4 +312,6 @@ module.exports = {
   validateUpdateEvent,
   validateUpdateBlog,
   validateCertificate,
+  validateTestimonialDto,
+  validateEnquiryDto,
 };
