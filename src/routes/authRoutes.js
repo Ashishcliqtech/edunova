@@ -4,7 +4,6 @@ const {
   login,
   getMe,
   verifyOtp,
-  sendOtp,
   logout,
   forgotPassword,
   changePassword,
