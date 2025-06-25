@@ -68,8 +68,14 @@ const getUserById = catchAsync(async (req, res, next) => {
     if (!userId) {
       return next(new AppError("User ID is required", 400));
     }
+
+    // access control: only admin or the user themselves can access this endpoint
+    if (req.user.role !== "admin" && req.user.id !== userId) {
+      return next(new AppError("Access denied", 403));
+    }
     const user = await User.findById(userId).select("-password");
-    if (!user || user.role === "admin") {
+
+    if (!user) {
       return next(new AppError("User not found", 404));
     }
     successResponse(res, 200, "User fetched successfully", { user });
