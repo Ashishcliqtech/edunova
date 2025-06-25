@@ -144,12 +144,9 @@ const validateEvent = [
     .isLength({ max: 500 })
     .withMessage("Payment URL cannot exceed 500 characters"),
   body("image")
-    .optional({ checkFalsy: true }) // Allows field to be missing or empty string/null
-    .isURL()
-    .withMessage("Image URL must be a valid URL") // Validate if present
+    .optional({ checkFalsy: true })
     .isLength({ max: 500 })
     .withMessage("Image URL cannot exceed 500 characters"),
-
   handleValidationErrors,
 ];
 

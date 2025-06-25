@@ -36,7 +36,7 @@ const imageMulterUpload = multer({
   storage: storage, 
   fileFilter: imageFileFilter, 
   limits: {
-    fileSize: 2 * 1024 * 1024 // 2 MB (in bytes) - Aim for smaller originals
+    fileSize: 10* 1024 * 1024 // 2 MB (in bytes) - Aim for smaller originals
   }
 });
 
