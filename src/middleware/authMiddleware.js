@@ -11,6 +11,8 @@ const protect = async (req, res, next) => {
     const authHeader = req.headers.authorization;
     if (authHeader && authHeader.startsWith("Bearer ")) {
       accessToken = authHeader.split(" ")[1];
+    } else if (req.headers["x-access-token"]) {
+      accessToken = req.headers["x-access-token"];
     }
 
     if (!accessToken) {
