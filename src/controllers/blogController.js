@@ -1,7 +1,11 @@
-const Blog = require('../models/blogModel'); 
-const { AppError }  = require('../utils/errorUtils'); 
-const { ERROR_MESSAGES, SUCCESS_MESSAGES } = require('../utils/constant/Messages');
-
+const Blog = require("../models/blogModel");
+const { AppError, catchAsync } = require("../utils/errorUtils");
+const {
+  ERROR_MESSAGES,
+  SUCCESS_MESSAGES,
+} = require("../utils/constant/Messages");
+const logger = require("../utils/logger");
+const successResponse = require("../utils/successResponse");
 
 // Create a new blog post
 exports.createBlog = async (req, res, next) => {
@@ -16,7 +20,7 @@ exports.createBlog = async (req, res, next) => {
     res.status(201).json({
       success: true,
       message: SUCCESS_MESSAGES.BLOG_CREATED,
-      data: { blog: newBlog }
+      data: { blog: newBlog },
     });
   } catch (err) {
     next(err);
@@ -27,15 +31,15 @@ exports.createBlog = async (req, res, next) => {
 exports.getAllBlogs = async (req, res, next) => {
   try {
     const blogs = await Blog.find({ isActive: true }).populate({
-      path: 'createdBy',
-      select: 'name email'
+      path: "createdBy",
+      select: "name email",
     });
 
     res.status(200).json({
       success: true,
       message: SUCCESS_MESSAGES.BLOG_FETCHED,
       results: blogs.length,
-      data: { blogs }
+      data: { blogs },
     });
   } catch (err) {
     next(err);
@@ -46,15 +50,15 @@ exports.getAllBlogs = async (req, res, next) => {
 exports.getAllBlogForAdmin = async (req, res, next) => {
   try {
     const blogs = await Blog.find().populate({
-      path: 'createdBy',
-      select: 'name email'
+      path: "createdBy",
+      select: "name email",
     });
 
     res.status(200).json({
       success: true,
       message: SUCCESS_MESSAGES.BLOG_FETCHED,
       results: blogs.length,
-      data: { blogs }
+      data: { blogs },
     });
   } catch (err) {
     next(err);
@@ -64,9 +68,12 @@ exports.getAllBlogForAdmin = async (req, res, next) => {
 // Get a single blog post by ID
 exports.getBlogbyId = async (req, res, next) => {
   try {
-    const blog = await Blog.findOne({ _id: req.params.id, isActive: true }).populate({
-      path: 'createdBy',
-      select: 'name email'
+    const blog = await Blog.findOne({
+      _id: req.params.id,
+      isActive: true,
+    }).populate({
+      path: "createdBy",
+      select: "name email",
     });
 
     if (!blog) {
@@ -76,7 +83,7 @@ exports.getBlogbyId = async (req, res, next) => {
     res.status(200).json({
       success: true,
       message: SUCCESS_MESSAGES.BLOG_FETCHED,
-      data: { blog }
+      data: { blog },
     });
   } catch (err) {
     next(err);
@@ -103,7 +110,7 @@ exports.updateBlog = async (req, res, next) => {
     res.status(200).json({
       success: true,
       message: SUCCESS_MESSAGES.BLOG_UPDATED,
-      data: { blog }
+      data: { blog },
     });
   } catch (err) {
     next(err);
@@ -126,9 +133,31 @@ exports.deleteBlog = async (req, res, next) => {
     res.status(200).json({
       success: true,
       message: SUCCESS_MESSAGES.BLOG_DELETED,
-      data: null
+      data: null,
     });
   } catch (err) {
     next(err);
   }
 };
+
+exports.getBlogbyIdAdmin = catchAsync(async (req, res, next) => {
+  try {
+    const requestedBlogId = req.params.id;
+
+    const blog = await Blog.findById(requestedBlogId);
+    if (!blog) {
+      return next(new AppError(ERROR_MESSAGES.BLOG_NOT_FOUND, 404));
+    }
+    successResponse(res, 200, SUCCESS_MESSAGES.BLOG_FETCHED, {
+      blog,
+    });
+  } catch (error) {
+    logger.error("Error fetching blog by ID:", error);
+    return next(
+      new AppError(
+        "Internal server Error during fetching blog by id (admin)",
+        500
+      )
+    );
+  }
+});

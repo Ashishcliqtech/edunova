@@ -9,6 +9,7 @@ const {
   getAdminEvents,
   getEventById,
   enrollInEvent,
+  getEventByIdAdmin,
 } = require("../controllers/eventController");
 
 const { protect, adminOnly } = require("../middleware/authMiddleware");
@@ -35,11 +36,11 @@ router.post("/events/enroll/:id", protect, enrollInEvent);
 // ADMIN ROUTES
 // =========================
 
-router.get("/admin/events-all", protect, adminOnly, getAdminEvents);
-
+router.get("/admin/events", protect, adminOnly, getAdminEvents);
+router.get("/admin/events/:id", protect, adminOnly, getEventByIdAdmin);
 // POST /api/v1/admin/events - Create event
 router.post(
-  "/admin/events",
+  "/admin/create-events",
   protect,
   adminOnly,
   uploadImageToCloudinary("image", "events"),
@@ -49,7 +50,7 @@ router.post(
 
 // Patch /api/v1/admin/events/:id - Update event
 router.patch(
-  "/admin/events/:id",
+  "/admin/update-events/:id",
   protect,
   adminOnly,
   uploadImageToCloudinary("image", "events"),
@@ -58,6 +59,6 @@ router.patch(
 );
 
 // DELETE /api/v1/admin/events/:id - Soft delete
-router.patch("/admin/events/:id", protect, adminOnly, deleteEvent);
+router.patch("/admin/delete-events/:id", protect, adminOnly, deleteEvent);
 
 module.exports = router;

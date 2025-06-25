@@ -8,6 +8,7 @@ const {
   getUserCourses,
   getAdminCourses,
   getCourseById,
+  getCourseByIdAdmin,
 } = require("../controllers/courseController");
 
 const { protect, adminOnly } = require("../middleware/authMiddleware"); // path to protect.js
@@ -31,11 +32,11 @@ router.get("/courses/:id", getCourseById);
 // ADMIN ROUTES
 // =======================
 
-router.get("/admin/courses-all", protect, adminOnly, getAdminCourses);
-
+router.get("/admin/courses", protect, adminOnly, getAdminCourses);
+router.get("/admin/courses/:id", protect, adminOnly, getCourseByIdAdmin);
 // POST /api/v1/admin/courses - Admin Only
 router.post(
-  "/admin/courses",
+  "/admin/create-courses",
   protect,
   adminOnly,
   uploadImageToCloudinary("image", "courses"), // <-- THIS MUST COME FIRST TO PARSE form-data
@@ -55,6 +56,6 @@ router.patch(
 );
 
 // DELETE /api/v1/admin/courses/:id - Admin Only
-router.patch("/admin/courses/:id", protect, adminOnly, deleteCourse);
+router.patch("/admin/delete-courses/:id", protect, adminOnly, deleteCourse);
 
 module.exports = router;

@@ -6,6 +6,7 @@ const {
   updateBlog,
   deleteBlog,
   getAllBlogForAdmin,
+  getBlogbyIdAdmin,
 } = require("../controllers/blogController");
 const { protect, adminOnly } = require("../middleware/authMiddleware");
 const {
@@ -21,20 +22,20 @@ const router = express.Router();
 // =======================
 
 // GET /api/v1/blog
-router.get("/blog-for-user", getAllBlogs);
+router.get("/blogs", getAllBlogs);
 
 // GET /api/v1/blog/:id
-router.get("/blog/:id", getBlogbyId);
-
+router.get("/blogs/:id", getBlogbyId);
+router.get("/admin/blogs/:id", getBlogbyIdAdmin);
 // =======================
 // ADMIN ROUTES
 // =======================
 
-router.get("/admin/blog-all", protect, adminOnly, getAllBlogForAdmin);
+router.get("/admin/blogs", protect, adminOnly, getAllBlogForAdmin);
 
 // POST /api/v1/admin/blog - Admin Only
 router.post(
-  "/admin/blog",
+  "/admin/create-blog",
   protect,
   adminOnly,
   uploadImageToCloudinary("image", "blogs"),
@@ -44,7 +45,7 @@ router.post(
 
 // PUT /api/v1/admin/blog/:id - Admin Only
 router.patch(
-  "/admin/blog/:id",
+  "/admin/update-blog/:id",
   protect,
   adminOnly,
   uploadImageToCloudinary("image", "blogs"),
@@ -53,6 +54,6 @@ router.patch(
 );
 
 // DELETE /api/v1/admin/blog/:id - Admin Only
-router.patch("/admin/blog/:id", protect, adminOnly, deleteBlog);
+router.patch("/admin/delete-blog/:id", protect, adminOnly, deleteBlog);
 
 module.exports = router;
