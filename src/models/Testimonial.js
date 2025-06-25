@@ -23,6 +23,10 @@ const testimonialSchema = new mongoose.Schema(
       minlength: [10, "Message must be at least 5 characters long"],
       maxlength: [2000, "Message cannot exceed 2000 characters"],
     },
+    isActive: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,
