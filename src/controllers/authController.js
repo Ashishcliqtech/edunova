@@ -230,7 +230,11 @@ const refreshAccessToken = catchAsync(async (req, res, next) => {
     await user.setRefreshToken(newRefreshToken);
     await user.save({ validateBeforeSave: false });
 
-    return sendTokenResponse(user, newAccessToken, newRefreshToken, 200, res);
+    res.setHeader("x-access-token", newAccessToken);
+    res.setHeader("x-user-id", user._id.toString());
+    res.setHeader("x-user-role", user.role);
+    logger.info(`User role: ${user.role}`);
+    return sendTokenResponse(user, newRefreshToken, 200, res);
   } catch (error) {
     logger.error("Error refreshing token:", error);
     return next(
