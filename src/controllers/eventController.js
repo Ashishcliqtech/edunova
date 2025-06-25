@@ -1,7 +1,11 @@
-const Event = require('../models/Event');
-const { AppError } = require('../utils/errorUtils');
-const { ERROR_MESSAGES, SUCCESS_MESSAGES } = require('../utils/constant/Messages');
-
+const Event = require("../models/Event");
+const { AppError, catchAsync } = require("../utils/errorUtils");
+const {
+  ERROR_MESSAGES,
+  SUCCESS_MESSAGES,
+} = require("../utils/constant/Messages");
+const successResponse = require("../utils/successResponse");
+const logger = require("../utils/logger");
 
 // ============================
 // EVENT CONTROLLER (Admin + User)
@@ -18,13 +22,13 @@ const createEvent = async (req, res, next) => {
       price,
       paymentUrl,
       image,
-      createdBy: req.user._id
+      createdBy: req.user._id,
     });
 
     res.status(201).json({
       success: true,
       message: SUCCESS_MESSAGES.EVENT_CREATED,
-      data: { event }
+      data: { event },
     });
   } catch (err) {
     next(err);
@@ -41,20 +45,20 @@ const updateEvent = async (req, res, next) => {
     const updateData = {
       ...(title && { title }),
       ...(description && { description }),
-      ...(typeof price !== 'undefined' && { price }),
+      ...(typeof price !== "undefined" && { price }),
       ...(paymentUrl && { paymentUrl }),
-      ...(image && { image })
+      ...(image && { image }),
     };
 
     event = await Event.findByIdAndUpdate(req.params.id, updateData, {
       new: true,
-      runValidators: true
+      runValidators: true,
     });
 
     res.status(200).json({
       success: true,
       message: SUCCESS_MESSAGES.EVENT_UPDATED,
-      data: { event }
+      data: { event },
     });
   } catch (err) {
     next(err);
@@ -72,7 +76,7 @@ const deleteEvent = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      message: SUCCESS_MESSAGES.EVENT_DELETED
+      message: SUCCESS_MESSAGES.EVENT_DELETED,
     });
   } catch (err) {
     next(err);
@@ -90,7 +94,7 @@ const getUserEvents = async (req, res, next) => {
 
     // Search filter - uses 'title' and 'description' from your Event schema
     if (req.query.search) {
-      const regex = new RegExp(req.query.search, 'i');
+      const regex = new RegExp(req.query.search, "i");
       filter.$or = [{ title: regex }, { description: regex }];
       // Add other relevant fields if available in your Event model, e.g.,
       // { location: regex }, { tags: regex }
@@ -103,7 +107,7 @@ const getUserEvents = async (req, res, next) => {
 
     const [events, total] = await Promise.all([
       query,
-      Event.countDocuments(filter)
+      Event.countDocuments(filter),
     ]);
 
     res.status(200).json({
@@ -113,7 +117,7 @@ const getUserEvents = async (req, res, next) => {
       total,
       currentPage: page,
       totalPages: Math.ceil(total / limit),
-      data: { events }
+      data: { events },
     });
   } catch (err) {
     next(err);
@@ -131,7 +135,7 @@ const getAdminEvents = async (req, res, next) => {
 
     // Search filter - uses 'title' and 'description' from your Event schema
     if (req.query.search) {
-      const regex = new RegExp(req.query.search, 'i');
+      const regex = new RegExp(req.query.search, "i");
       filter.$or = [{ title: regex }, { description: regex }];
       // Add other relevant fields if available in your Event model, e.g.,
       // { location: regex }, { tags: regex }
@@ -141,11 +145,11 @@ const getAdminEvents = async (req, res, next) => {
       .skip(skip)
       .limit(limit)
       .sort({ createdAt: -1 }) // Assuming you have a createdAt field
-      .populate('createdBy', 'name email'); // Admins get creator info
+      .populate("createdBy", "name email"); // Admins get creator info
 
     const [events, total] = await Promise.all([
       query,
-      Event.countDocuments(filter)
+      Event.countDocuments(filter),
     ]);
 
     res.status(200).json({
@@ -155,7 +159,7 @@ const getAdminEvents = async (req, res, next) => {
       total,
       currentPage: page,
       totalPages: Math.ceil(total / limit),
-      data: { events }
+      data: { events },
     });
   } catch (err) {
     next(err);
@@ -173,7 +177,7 @@ const getEventById = async (req, res, next) => {
     res.status(200).json({
       success: true,
       message: SUCCESS_MESSAGES.EVENT_FETCHED,
-      data: { event }
+      data: { event },
     });
   } catch (err) {
     next(err);
@@ -190,9 +194,11 @@ const enrollInEvent = async (req, res, next) => {
     }
 
     if (!event.paymentUrl) {
-      return next(new AppError("Payment URL not available for this event", 400));
+      return next(
+        new AppError("Payment URL not available for this event", 400)
+      );
     }
-    
+
     res.status(200).json({
       success: true,
       paymentUrl: event.paymentUrl,
@@ -203,6 +209,27 @@ const enrollInEvent = async (req, res, next) => {
   }
 };
 
+const getEventByIdAdmin = catchAsync(async (req, res, next) => {
+  try {
+    const eventId = req.params.id;
+    if (!eventId) {
+      return next(new AppError(ERROR_MESSAGES.EVENT_ID_REQUIRED, 400));
+    }
+    const event = await Event.findById(eventId); // Admins get creator info
+    if (!event) {
+      return next(new AppError(ERROR_MESSAGES.EVENT_NOT_FOUND, 404));
+    }
+    successResponse(res, 200, SUCCESS_MESSAGES.EVENT_FETCHED, {
+      event,
+    });
+  } catch (err) {
+    logger.error("Error fetching event by ID:", err);
+    return next(
+      new AppError("Failed to fetch event Internal server error", 500)
+    );
+  }
+});
+
 module.exports = {
   createEvent,
   updateEvent,
@@ -210,5 +237,6 @@ module.exports = {
   getUserEvents,
   getAdminEvents,
   getEventById,
-  enrollInEvent
+  enrollInEvent,
+  getEventByIdAdmin,
 };
