@@ -131,21 +131,24 @@ const getAdminEvents = async (req, res, next) => {
     const limit = Math.max(parseInt(req.query.limit) || 10, 1);
     const skip = (page - 1) * limit;
 
-    const filter = {}; // Admins see all events, no default isActive filter
+    const filter = {}; // Admins see all events by default
 
-    // Search filter - uses 'title' and 'description' from your Event schema
+    // Filter by active status
+    if (req.query.isActive !== undefined && req.query.isActive !== null) {
+      filter.isActive = req.query.isActive === 'true';
+    }
+
+    // Filter by search term
     if (req.query.search) {
       const regex = new RegExp(req.query.search, "i");
       filter.$or = [{ title: regex }, { description: regex }];
-      // Add other relevant fields if available in your Event model, e.g.,
-      // { location: regex }, { tags: regex }
     }
 
     const query = Event.find(filter)
       .skip(skip)
       .limit(limit)
-      .sort({ createdAt: -1 }) // Assuming you have a createdAt field
-      .populate("createdBy", "name email"); // Admins get creator info
+      .sort({ createdAt: -1 })
+      .populate("createdBy", "name email");
 
     const [events, total] = await Promise.all([
       query,
@@ -154,7 +157,7 @@ const getAdminEvents = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      message: SUCCESS_MESSAGES.EVENT_FETCHED,
+      message: "Successfully fetched events for admin.",
       count: events.length,
       total,
       currentPage: page,

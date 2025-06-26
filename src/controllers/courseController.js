@@ -114,24 +114,48 @@ const getUserCourses = async (req, res, next) => {
 // GET /api/v1/admin/courses-all (Admin only - view all courses, active or inactive)
 const getAdminCourses = async (req, res, next) => {
   try {
+    // --- Pagination ---
     const page = Math.max(parseInt(req.query.page) || 1, 1);
     const limit = Math.max(parseInt(req.query.limit) || 10, 1);
     const skip = (page - 1) * limit;
 
-    const filter = {}; // Admins see all courses, no default isActive filter
+    // Start with an empty filter object. Admins can see everything by default.
+    const filter = {};
+    // This allows the frontend to send `?isActive=true` or `?isActive=false`.
+    if (req.query.isActive !== undefined && req.query.isActive !== null) {
+      // The query parameter will be a string 'true' or 'false'.
+      // We convert it to a boolean and add it to our filter.
+      filter.isActive = req.query.isActive === 'true';
+    }
+    // If 'isActive' is not in the query, the filter won't include this field,
+    // so courses will be fetched regardless of their active status.
 
-    // Search filter - uses 'title' and 'description' from your Course schema
+    // --- Search Filter ---
+    // This part remains the same. It adds to the filter if a search term is provided.
     if (req.query.search) {
       const regex = new RegExp(req.query.search, "i");
-      filter.$or = [{ title: regex }, { description: regex }];
+      // Use $and to ensure both status and search filters apply if both are present
+      if (filter.$or) {
+        filter.$and = [
+          { $or: filter.$or },
+          { $or: [{ title: regex }, { description: regex }] }
+        ];
+        delete filter.$or;
+      } else {
+        filter.$or = [{ title: regex }, { description: regex }];
+      }
     }
 
+    // --- Database Query ---
+    // The `filter` object now contains all the necessary conditions.
     const query = Course.find(filter)
       .skip(skip)
       .limit(limit)
       .sort({ createdAt: -1 })
-      .populate("createdBy", "name email"); // Admins get creator info
+      .populate("createdBy", "name email");
 
+    // --- Execution and Response ---
+    // Execute the query to get courses and a total count simultaneously.
     const [courses, total] = await Promise.all([
       query,
       Course.countDocuments(filter),
@@ -139,7 +163,7 @@ const getAdminCourses = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      message: SUCCESS_MESSAGES.COURSE_FETCHED,
+      message: "Successfully fetched courses for admin.", // Using a clearer message
       count: courses.length,
       total,
       currentPage: page,
@@ -147,9 +171,11 @@ const getAdminCourses = async (req, res, next) => {
       data: { courses },
     });
   } catch (err) {
+    // Pass any errors to the error-handling middleware.
     next(err);
   }
 };
+
 
 // GET /api/courses/:id
 const getCourseById = async (req, res, next) => {
