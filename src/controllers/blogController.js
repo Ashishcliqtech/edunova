@@ -49,15 +49,41 @@ exports.getAllBlogs = async (req, res, next) => {
 // NEW: Get all Blog (for admin) - active and inactive
 exports.getAllBlogForAdmin = async (req, res, next) => {
   try {
-    const blogs = await Blog.find().populate({
-      path: "createdBy",
-      select: "name email",
-    });
+    const page = Math.max(parseInt(req.query.page) || 1, 1);
+    const limit = Math.max(parseInt(req.query.limit) || 10, 1);
+    const skip = (page - 1) * limit;
+
+    const filter = {}; // Admins see all blogs by default
+
+    // Filter by active status (assuming blogs have an 'isActive' field)
+    if (req.query.isActive !== undefined && req.query.isActive !== null) {
+      filter.isActive = req.query.isActive === 'true';
+    }
+
+    // Filter by search term (assuming blogs have 'title' and 'description' fields)
+    if (req.query.search) {
+      const regex = new RegExp(req.query.search, "i");
+      filter.$or = [{ title: regex }, { description: regex }];
+    }
+
+    const query = Blog.find(filter)
+      .skip(skip)
+      .limit(limit)
+      .sort({ createdAt: -1 }) // Sort by creation date, newest first
+      .populate("createdBy", "name email");
+
+    const [blogs, total] = await Promise.all([
+      query,
+      Blog.countDocuments(filter),
+    ]);
 
     res.status(200).json({
       success: true,
-      message: SUCCESS_MESSAGES.BLOG_FETCHED,
-      results: blogs.length,
+      message: "Successfully fetched blogs for admin.",
+      count: blogs.length,
+      total,
+      currentPage: page,
+      totalPages: Math.ceil(total / limit),
       data: { blogs },
     });
   } catch (err) {
