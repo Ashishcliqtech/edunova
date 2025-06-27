@@ -102,8 +102,8 @@ const validateCourse = [
     .withMessage("Title must be between 3 and 100 characters"),
   body("description")
     .trim()
-    .isLength({ min: 10, max: 1000 })
-    .withMessage("Description must be between 10 and 1000 characters"),
+    .isLength({ min: 10, max: 10000 })
+    .withMessage("Description must be between 10 and 10000 characters"),
   // If 'image' is a URL string in the body, validate it as such.
   // If 'image' is handled via file upload middleware (like multer),
   // then it won't be in body directly and won't need body validation here.
@@ -126,8 +126,8 @@ const validateEvent = [
     .withMessage("Event title is required"), // Added notEmpty for required field
   body("description")
     .trim()
-    .isLength({ min: 10, max: 2000 })
-    .withMessage("Description must be between 10 and 1000 characters")
+    .isLength({ min: 10, max: 10000 })
+    .withMessage("Description must be between 10 and 10000 characters")
     .notEmpty()
     .withMessage("Event description is required"), // Added notEmpty for required field
   body("price")
@@ -162,8 +162,8 @@ const validateBlog = [
     .trim()
     .notEmpty()
     .withMessage("Blog description is required")
-    .isLength({ min: 10, max: 5000 })
-    .withMessage("Description must be between 50 and 5000 characters long"),
+    .isLength({ min: 10, max: 10000 })
+    .withMessage("Description must be between 10 and 10000 characters long"),
 
   body("image")
     .trim()
@@ -184,8 +184,8 @@ const validateUpdateCourse = [
   body("description")
     .optional() // Make description optional for updates
     .trim()
-    .isLength({ min: 10, max: 5000 })
-    .withMessage("Description must be between 10 and 5000 characters"),
+    .isLength({ min: 10, max: 10000 })
+    .withMessage("Description must be between 10 and 10000 characters"),
   body("image")
     .optional() // Make image optional for updates (and checkFalsy if empty string is allowed)
     .isURL()
@@ -202,8 +202,8 @@ const validateUpdateEvent = [
   body("description")
     .optional() // Make description optional for updates
     .trim()
-    .isLength({ min: 10, max: 5000 })
-    .withMessage("Description must be between 10 and 1000 characters"),
+    .isLength({ min: 10, max: 10000 })
+    .withMessage("Description must be between 10 and 10000 characters"),
   body("price")
     .optional() // Make price optional for updates
     .isFloat({ min: 0 })
@@ -233,8 +233,8 @@ const validateUpdateBlog = [
   body("description")
     .optional() // Make description optional for updates
     .trim()
-    .isLength({ min: 10, max: 5000 })
-    .withMessage("Description must be between 50 and 5000 characters long"),
+    .isLength({ min: 10, max: 10000 })
+    .withMessage("Description must be between 10 and 10000 characters long"),
   body("image")
     .optional() // Make image optional for updates
     .trim()
