@@ -126,7 +126,7 @@ const validateEvent = [
     .withMessage("Event title is required"), // Added notEmpty for required field
   body("description")
     .trim()
-    .isLength({ min: 10, max: 1000 })
+    .isLength({ min: 10, max: 2000 })
     .withMessage("Description must be between 10 and 1000 characters")
     .notEmpty()
     .withMessage("Event description is required"), // Added notEmpty for required field
@@ -145,8 +145,8 @@ const validateEvent = [
     .withMessage("Payment URL cannot exceed 500 characters"),
   body("image")
     .optional({ checkFalsy: true })
-    .isLength({ max: 500 })
-    .withMessage("Image URL cannot exceed 500 characters"),
+    .isLength({ max: 600 })
+    .withMessage("Image URL cannot exceed 600 characters"),
   handleValidationErrors,
 ];
 
@@ -162,7 +162,7 @@ const validateBlog = [
     .trim()
     .notEmpty()
     .withMessage("Blog description is required")
-    .isLength({ min: 50, max: 5000 })
+    .isLength({ min: 10, max: 5000 })
     .withMessage("Description must be between 50 and 5000 characters long"),
 
   body("image")
@@ -184,8 +184,8 @@ const validateUpdateCourse = [
   body("description")
     .optional() // Make description optional for updates
     .trim()
-    .isLength({ min: 10, max: 1000 })
-    .withMessage("Description must be between 10 and 1000 characters"),
+    .isLength({ min: 10, max: 5000 })
+    .withMessage("Description must be between 10 and 5000 characters"),
   body("image")
     .optional() // Make image optional for updates (and checkFalsy if empty string is allowed)
     .isURL()
@@ -202,7 +202,7 @@ const validateUpdateEvent = [
   body("description")
     .optional() // Make description optional for updates
     .trim()
-    .isLength({ min: 10, max: 1000 })
+    .isLength({ min: 10, max: 5000 })
     .withMessage("Description must be between 10 and 1000 characters"),
   body("price")
     .optional() // Make price optional for updates
@@ -213,13 +213,13 @@ const validateUpdateEvent = [
     .trim()
     .isURL()
     .withMessage("Payment URL must be a valid URL")
-    .isLength({ max: 500 })
-    .withMessage("Payment URL cannot exceed 500 characters"),
+    .isLength({ max: 600 })
+    .withMessage("Payment URL cannot exceed 600 characters"),
   body("image")
     .optional({ checkFalsy: true }) // Allows field to be missing, null, or empty string for updates
     .isURL()
     .withMessage("Image URL must be a valid URL")
-    .isLength({ max: 500 })
+    .isLength({ max: 600 })
     .withMessage("Image URL cannot exceed 500 characters"),
   handleValidationErrors,
 ];
@@ -233,7 +233,7 @@ const validateUpdateBlog = [
   body("description")
     .optional() // Make description optional for updates
     .trim()
-    .isLength({ min: 50, max: 5000 })
+    .isLength({ min: 10, max: 5000 })
     .withMessage("Description must be between 50 and 5000 characters long"),
   body("image")
     .optional() // Make image optional for updates
