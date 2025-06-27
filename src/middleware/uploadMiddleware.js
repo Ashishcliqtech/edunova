@@ -21,7 +21,7 @@ const imageFileFilter = (req, file, cb) => {
 
 const pdfFileFilter = (req, file, cb) => {
   try {
-    if (file.mimetype === 'application/pdf') {
+    if (file.mimetype === 'certificatePdf') {
       cb(null, true);
     } else {
       cb(new AppError(ERROR_MESSAGES.INVALID_PDF_FILE, 400), false);
