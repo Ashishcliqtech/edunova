@@ -1,7 +1,7 @@
-const multer = require('multer');
-const cloudinary = require('../config/cloudinaryConfig'); // Ensure this initializes cloudinary correctly
-const { AppError } = require('../utils/errorUtils');
-const { ERROR_MESSAGES } = require('../utils/constant/Messages');
+const multer = require("multer");
+const cloudinary = require("../config/cloudinaryConfig"); // Ensure this initializes cloudinary correctly
+const { AppError } = require("../utils/errorUtils");
+const { ERROR_MESSAGES } = require("../utils/constant/Messages");
 
 // --- Multer Storage Configuration ---
 const storage = multer.memoryStorage(); // Crucial for Cloudinary uploads (access to buffer)
@@ -9,7 +9,7 @@ const storage = multer.memoryStorage(); // Crucial for Cloudinary uploads (acces
 // --- Multer File Filters ---
 const imageFileFilter = (req, file, cb) => {
   try {
-    if (file.mimetype.startsWith('image')) {
+    if (file.mimetype.startsWith("image")) {
       cb(null, true);
     } else {
       cb(new AppError(ERROR_MESSAGES.INVALID_IMAGE_FILE, 400), false);
@@ -21,7 +21,7 @@ const imageFileFilter = (req, file, cb) => {
 
 const pdfFileFilter = (req, file, cb) => {
   try {
-    if (file.mimetype === 'certificatePdf') {
+    if (file.mimetype === "application/pdf") {
       cb(null, true);
     } else {
       cb(new AppError(ERROR_MESSAGES.INVALID_PDF_FILE, 400), false);
@@ -33,19 +33,19 @@ const pdfFileFilter = (req, file, cb) => {
 
 // --- Multer Instances ---
 const imageMulterUpload = multer({
-  storage: storage, 
-  fileFilter: imageFileFilter, 
+  storage: storage,
+  fileFilter: imageFileFilter,
   limits: {
-    fileSize: 10* 1024 * 1024 // 2 MB (in bytes) - Aim for smaller originals
-  }
+    fileSize: 10 * 1024 * 1024, // 2 MB (in bytes) - Aim for smaller originals
+  },
 });
 
 const pdfMulterUpload = multer({
   storage: storage,
   fileFilter: pdfFileFilter,
   limits: {
-    fileSize: 10 * 1024 * 1024 // 10MB limit for PDFs (adjust as needed)
-  }
+    fileSize: 20 * 1024 * 1024, // 10MB limit for PDFs (adjust as needed)
+  },
 });
 
 /**
@@ -57,7 +57,13 @@ const pdfMulterUpload = multer({
  * @param {string} errorMessage - Specific error message for Cloudinary failure.
  * @param {string} targetFolder - The specific folder name in Cloudinary (e.g., 'blogs', 'certificates').
  */
-const handleCloudinaryUpload = async (req, next, fieldName, errorMessage, targetFolder) => {
+const handleCloudinaryUpload = async (
+  req,
+  next,
+  fieldName,
+  errorMessage,
+  targetFolder
+) => {
   try {
     if (!req.file) {
       return next(); // No file uploaded, proceed. Your schema validation should handle required fields.
@@ -65,22 +71,26 @@ const handleCloudinaryUpload = async (req, next, fieldName, errorMessage, target
 
     // Defensive check for cloudinary initialization
     if (!cloudinary || !cloudinary.uploader) {
-      console.error("Cloudinary SDK not properly initialized or imported. Check config/cloudinaryConfig.js and your .env variables.");
+      console.error(
+        "Cloudinary SDK not properly initialized or imported. Check config/cloudinaryConfig.js and your .env variables."
+      );
       return next(new AppError(errorMessage, 500));
     }
 
     try {
       const result = await cloudinary.uploader.upload(
-        `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`,
+        `data:${req.file.mimetype};base64,${req.file.buffer.toString(
+          "base64"
+        )}`,
         {
           folder: targetFolder, // THIS IS THE KEY CHANGE! Use the dynamic targetFolder
-          resource_type: 'auto'
+          resource_type: "auto",
         }
       );
       req.body[fieldName] = result.secure_url;
       next();
     } catch (error) {
-      console.error('Cloudinary upload failed:', error);
+      console.error("Cloudinary upload failed:", error);
       return next(new AppError(errorMessage, 500));
     }
   } catch (err) {
@@ -100,12 +110,23 @@ const uploadImageToCloudinary = (fieldName, folderName) => {
       imageMulterUpload.single(fieldName)(req, res, async (err) => {
         try {
           if (err instanceof multer.MulterError) {
-            return next(new AppError(`${ERROR_MESSAGES.FILE_SIZE_EXCEEDED}: ${err.message}`, 400));
+            return next(
+              new AppError(
+                `${ERROR_MESSAGES.FILE_SIZE_EXCEEDED}: ${err.message}`,
+                400
+              )
+            );
           } else if (err) {
             return next(err);
           }
           // Pass the folderName to the handler
-          await handleCloudinaryUpload(req, next, fieldName, ERROR_MESSAGES.IMAGE_UPLOAD_FAILED, folderName);
+          await handleCloudinaryUpload(
+            req,
+            next,
+            fieldName,
+            ERROR_MESSAGES.IMAGE_UPLOAD_FAILED,
+            folderName
+          );
         } catch (error) {
           return next(error);
         }
@@ -128,12 +149,23 @@ const uploadPdfToCloudinary = (fieldName, folderName) => {
       pdfMulterUpload.single(fieldName)(req, res, async (err) => {
         try {
           if (err instanceof multer.MulterError) {
-            return next(new AppError(`${ERROR_MESSAGES.FILE_SIZE_EXCEEDED}: ${err.message}`, 400));
+            return next(
+              new AppError(
+                `${ERROR_MESSAGES.FILE_SIZE_EXCEEDED}: ${err.message}`,
+                400
+              )
+            );
           } else if (err) {
             return next(err);
           }
           // Pass the folderName to the handler
-          await handleCloudinaryUpload(req, next, fieldName, ERROR_MESSAGES.PDF_UPLOAD_FAILED, folderName);
+          await handleCloudinaryUpload(
+            req,
+            next,
+            fieldName,
+            ERROR_MESSAGES.PDF_UPLOAD_FAILED,
+            folderName
+          );
         } catch (error) {
           return next(error);
         }
@@ -146,5 +178,5 @@ const uploadPdfToCloudinary = (fieldName, folderName) => {
 
 module.exports = {
   uploadImageToCloudinary,
-  uploadPdfToCloudinary
+  uploadPdfToCloudinary,
 };
