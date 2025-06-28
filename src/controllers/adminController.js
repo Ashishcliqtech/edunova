@@ -5,8 +5,8 @@ const logger = require("../utils/logger");
 
 const getAllUsers = catchAsync(async (req, res, next) => {
   try {
-    const page = parseInt(req.query.page, 10) || 1;
-    const limit = parseInt(req.query.limit, 10) || 10;
+    const page = Math.max(parseInt(req.query.page) || 1, 1);
+    const limit = Math.max(parseInt(req.query.limit) || 10, 1);
     const skip = (page - 1) * limit;
 
     const users = await User.find({ role: { $ne: "admin" } })

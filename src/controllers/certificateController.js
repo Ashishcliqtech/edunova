@@ -4,12 +4,17 @@ const {
   ERROR_MESSAGES,
   SUCCESS_MESSAGES,
 } = require("../utils/constant/Messages");
+const logger = require("../utils/logger");
 
 // Admin: Add certificate (PDF upload handled by middleware)
 exports.addCertificate = async (req, res, next) => {
   try {
-    const pdfUrl = req.body.certificatePdf; // Set by uploadPdfToCloudinary middleware
+    const pdfUrl = req.body.certificatePdf;
+    const userEmail = req.body.userEmail;
 
+    if (!userEmail) {
+      return next(new AppError("User email is required.", 400));
+    }
     if (!pdfUrl) {
       return next(new AppError(ERROR_MESSAGES.PDF_UPLOAD_FAILED, 400));
     }
@@ -18,7 +23,7 @@ exports.addCertificate = async (req, res, next) => {
     let certificateKey;
     let isUnique = false;
     while (!isUnique) {
-      certificateKey = `CERT-${Date.now()}-${Math.floor(
+      certificateKey = `Edunova-${Date.now()}-${Math.floor(
         Math.random() * 10000
       )}`;
       const existing = await Certificate.findOne({ certificateKey });
@@ -28,24 +33,31 @@ exports.addCertificate = async (req, res, next) => {
     const cert = await Certificate.create({
       certificateKey,
       pdfUrl,
+      userEmail,
     });
 
     res.status(201).json({
       success: true,
       message:
         SUCCESS_MESSAGES.CERTIFICATE_CREATED ||
-        "Certificate created successfully.",
+        "Certificate uploaded successfully.",
       data: { certificate: cert },
     });
   } catch (err) {
-    next(err);
+    logger.error("Error uploading certificate:", err);
+    return next(
+      new AppError("Failed to upload certificate Internal server Error.", 500)
+    );
   }
 };
 
 // Admin: View all certificates
 exports.getAllCertificates = async (req, res, next) => {
   try {
-    const certs = await Certificate.find();
+    const certs = await Certificate.find({ createdAt: -1 });
+    if (!certs) {
+      return next(new AppError("Certificate not found"));
+    }
     res.status(200).json({
       success: true,
       message:
@@ -63,6 +75,9 @@ exports.getAllCertificates = async (req, res, next) => {
 exports.getCertificateByKey = async (req, res, next) => {
   try {
     const { key } = req.params;
+    if (!key) {
+      return next(new AppError("Certificate key not found"));
+    }
     const cert = await Certificate.findOne({
       certificateKey: key,
       isActive: true,
