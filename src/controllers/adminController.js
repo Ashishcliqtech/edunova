@@ -5,18 +5,32 @@ const logger = require("../utils/logger");
 
 const getAllUsers = catchAsync(async (req, res, next) => {
   try {
-    const page = Math.max(parseInt(req.query.page) || 1, 1);
-    const limit = Math.max(parseInt(req.query.limit) || 10, 1);
-    const skip = (page - 1) * limit;
+    let users, totalUsers, totalPages, page, limit;
 
-    const users = await User.find({ role: { $ne: "admin" } })
-      .select("-password")
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
+    if (!req.query.page && !req.query.limit) {
+      // No pagination params: return all users
+      users = await User.find({ role: { $ne: "admin" } })
+        .select("-password")
+        .sort({ createdAt: -1 });
+      totalUsers = users.length;
+      totalPages = 1;
+      page = 1;
+      limit = totalUsers;
+    } else {
+      // Paginated response
+      page = Math.max(parseInt(req.query.page) || 1, 1);
+      limit = Math.max(parseInt(req.query.limit) || 10, 1);
+      const skip = (page - 1) * limit;
 
-    const totalUsers = await User.countDocuments({ role: { $ne: "admin" } });
-    const totalPages = Math.ceil(totalUsers / limit);
+      users = await User.find({ role: { $ne: "admin" } })
+        .select("-password")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit);
+
+      totalUsers = await User.countDocuments({ role: { $ne: "admin" } });
+      totalPages = Math.ceil(totalUsers / limit);
+    }
 
     if (!users || users.length === 0) {
       return next(new AppError("No users found", 404));
