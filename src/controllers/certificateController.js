@@ -54,7 +54,7 @@ exports.addCertificate = async (req, res, next) => {
 // Admin: View all certificates
 exports.getAllCertificates = async (req, res, next) => {
   try {
-    const certs = await Certificate.find({ createdAt: -1 });
+    const certs = await Certificate.find().sort({ createdAt: -1 });
     if (!certs) {
       return next(new AppError("Certificate not found"));
     }
