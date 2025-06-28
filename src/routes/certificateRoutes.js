@@ -8,6 +8,7 @@ const {
   getCertificateByKey,
   downloadCertificate,
   softDeleteCertificate,
+  getCertificateByKeyForAdmin,
 } = require("../controllers/certificateController");
 
 const router = express.Router();
@@ -35,6 +36,12 @@ router.patch(
 
 // Public: Search certificate by key (no login required)
 router.get("/certificate/:key", getCertificateByKey);
+router.get(
+  "/admin/certificate/:key",
+  protect,
+  adminOnly,
+  getCertificateByKeyForAdmin
+);
 
 // User: Download certificate (login required)
 router.get("/certificate/:key/download", protect, downloadCertificate);

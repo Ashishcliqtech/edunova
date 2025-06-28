@@ -37,9 +37,9 @@ const enquirySchema = new mongoose.Schema(
       minlength: [5, "Message must be at least 5 characters long"],
       maxlength: [2000, "Message cannot exceed 2000 characters"],
     },
-    isActive: {
+    isResolved: {
       type: Boolean,
-      default: true,
+      default: false,
     },
   },
   {
