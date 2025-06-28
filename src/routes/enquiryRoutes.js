@@ -9,7 +9,8 @@ const {
   createEnquiry,
   getAllEnquiry,
   getEnquiryByUserId,
-  deleteEnquiryById,
+  statusEnquiryById,
+  getEnquiryById,
 } = require("../controllers/enquiryController");
 const { validateEnquiryDto } = require("../middleware/validationMiddleware");
 
@@ -20,17 +21,18 @@ router.post(
   userOnly,
   createEnquiry
 );
-router.get("/get-enquiry", getAllEnquiry);
+router.get("/admin/get-enquiry/:id", protect, adminOnly, getEnquiryById);
+router.get("/admin/get-enquiry", protect, adminOnly, getAllEnquiry);
 router.get(
-  "/admin/get-enquiry/:userId",
+  "/admin/enquiries-userId/:userId",
   protect,
   adminOnly,
   getEnquiryByUserId
 );
 router.patch(
-  "/admin/delete-enquiry/:eId",
+  "/admin/enquiry-status/:id",
   protect,
   adminOnly,
-  deleteEnquiryById
+  statusEnquiryById
 );
 module.exports = router;

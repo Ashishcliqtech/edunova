@@ -4,6 +4,9 @@ const router = express.Router();
 const {
   createTestimonial,
   getAllTestimonials,
+  verifyTestimonialById,
+  updateTestimonialById,
+  getAllTestimonialsAdmin,
   deleteTestimonialById,
 } = require("../controllers/testimonialController");
 const {
@@ -13,12 +16,19 @@ const {
 const { protect, adminOnly } = require("../middleware/authMiddleware");
 
 router.post("/create-testimonial", validateTestimonialDto, createTestimonial);
-router.get("/get-testimonials", getAllTestimonials);
-router.delete(
-  "/admin/delete-testimonial/:id",
+router.get("/user/get-testimonials", getAllTestimonials);
+router.patch(
+  "/admin/verify-testimonial/:id",
   protect,
   adminOnly,
-  deleteTestimonialById
+  verifyTestimonialById
+);
+
+router.get(
+  "/admin/get-testimonials",
+  protect,
+  adminOnly,
+  getAllTestimonialsAdmin
 );
 
 router.patch(
@@ -26,6 +36,12 @@ router.patch(
   protect,
   adminOnly,
   validateTestimonialDto,
-  createTestimonial
+  updateTestimonialById
+);
+router.delete(
+  "/admin/delete-testimonial/:id",
+  protect,
+  adminOnly,
+  deleteTestimonialById
 );
 module.exports = router;
