@@ -6,6 +6,7 @@ const {
 } = require("../utils/constant/Messages");
 const successResponse = require("../utils/successResponse");
 const logger = require("../utils/logger");
+const emptyListResponse = require("../utils/emptyListResponse");
 
 // ============================
 // EVENT CONTROLLER (Admin + User)
@@ -110,6 +111,22 @@ const getUserEvents = async (req, res, next) => {
       Event.countDocuments(filter),
     ]);
 
+    if (!events || events.length === 0) {
+      return emptyListResponse(
+        res,
+        ERROR_MESSAGES.EVENT_NOT_FOUND || "events not found.",
+        "events",
+        {
+          pagination: {
+            totalEvents: 0,
+            totalPages: 1,
+            currentPage: page,
+            pageSize: limit,
+          },
+        }
+      );
+    }
+
     res.status(200).json({
       success: true,
       message: SUCCESS_MESSAGES.EVENT_FETCHED,
@@ -135,7 +152,7 @@ const getAdminEvents = async (req, res, next) => {
 
     // Filter by active status
     if (req.query.isActive !== undefined && req.query.isActive !== null) {
-      filter.isActive = req.query.isActive === 'true';
+      filter.isActive = req.query.isActive === "true";
     }
 
     // Filter by search term
@@ -155,6 +172,16 @@ const getAdminEvents = async (req, res, next) => {
       Event.countDocuments(filter),
     ]);
 
+    if (!events || events.length === 0) {
+      return emptyListResponse(res, "No events found", "events", {
+        pagination: {
+          totalEvents: 0,
+          totalPages: 1,
+          currentPage: page,
+          pageSize: limit,
+        },
+      });
+    }
     res.status(200).json({
       success: true,
       message: "Successfully fetched events for admin.",

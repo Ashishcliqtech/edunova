@@ -6,6 +6,7 @@ const {
 } = require("../utils/constant/Messages");
 const successResponse = require("../utils/successResponse");
 const logger = require("../utils/logger");
+const emptyListResponse = require("../utils/emptyListResponse");
 
 // ============================
 // ADMIN: COURSE MANAGEMENT
@@ -97,6 +98,21 @@ const getUserCourses = async (req, res, next) => {
       Course.countDocuments(filter),
     ]);
 
+    if (!courses || courses.length === 0) {
+      return emptyListResponse(
+        res,
+        ERROR_MESSAGES.COURSE_NOT_FOUND || "No courses found.",
+        "courses",
+        {
+          pagination: {
+            totalCourses: 0,
+            totalPages: 1,
+            currentPage: page,
+            pageSize: limit,
+          },
+        }
+      );
+    }
     res.status(200).json({
       success: true,
       message: SUCCESS_MESSAGES.COURSE_FETCHED,
@@ -125,7 +141,7 @@ const getAdminCourses = async (req, res, next) => {
     if (req.query.isActive !== undefined && req.query.isActive !== null) {
       // The query parameter will be a string 'true' or 'false'.
       // We convert it to a boolean and add it to our filter.
-      filter.isActive = req.query.isActive === 'true';
+      filter.isActive = req.query.isActive === "true";
     }
     // If 'isActive' is not in the query, the filter won't include this field,
     // so courses will be fetched regardless of their active status.
@@ -138,7 +154,7 @@ const getAdminCourses = async (req, res, next) => {
       if (filter.$or) {
         filter.$and = [
           { $or: filter.$or },
-          { $or: [{ title: regex }, { description: regex }] }
+          { $or: [{ title: regex }, { description: regex }] },
         ];
         delete filter.$or;
       } else {
@@ -161,6 +177,17 @@ const getAdminCourses = async (req, res, next) => {
       Course.countDocuments(filter),
     ]);
 
+    if (!courses || courses.length === 0) {
+      return emptyListResponse(res, "No courses found", "courses", {
+        pagination: {
+          totalCourses: 0,
+          totalPages: 1,
+          currentPage: page,
+          pageSize: limit,
+        },
+      });
+    }
+
     res.status(200).json({
       success: true,
       message: "Successfully fetched courses for admin.", // Using a clearer message
@@ -175,7 +202,6 @@ const getAdminCourses = async (req, res, next) => {
     next(err);
   }
 };
-
 
 // GET /api/courses/:id
 const getCourseById = async (req, res, next) => {

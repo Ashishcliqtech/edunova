@@ -6,6 +6,7 @@ const {
 } = require("../utils/constant/Messages");
 const logger = require("../utils/logger");
 const successResponse = require("../utils/successResponse");
+const emptyListResponse = require("../utils/emptyListResponse");
 
 // Create a new blog post
 exports.createBlog = async (req, res, next) => {
@@ -35,6 +36,9 @@ exports.getAllBlogs = async (req, res, next) => {
       select: "name email",
     });
 
+    if (!blogs || blogs.length === 0) {
+      return emptyListResponse(res, "No blogs found", "blogs");
+    }
     res.status(200).json({
       success: true,
       message: SUCCESS_MESSAGES.BLOG_FETCHED,
@@ -57,7 +61,7 @@ exports.getAllBlogForAdmin = async (req, res, next) => {
 
     // Filter by active status (assuming blogs have an 'isActive' field)
     if (req.query.isActive !== undefined && req.query.isActive !== null) {
-      filter.isActive = req.query.isActive === 'true';
+      filter.isActive = req.query.isActive === "true";
     }
 
     // Filter by search term (assuming blogs have 'title' and 'description' fields)
@@ -77,6 +81,16 @@ exports.getAllBlogForAdmin = async (req, res, next) => {
       Blog.countDocuments(filter),
     ]);
 
+    if (!blogs || blogs.length === 0) {
+      return emptyListResponse(res, "No blogs found", "blogs", {
+        pagination: {
+          totalBlogs: 0,
+          totalPages: 1,
+          currentPage: page,
+          pageSize: limit,
+        },
+      });
+    }
     res.status(200).json({
       success: true,
       message: "Successfully fetched blogs for admin.",

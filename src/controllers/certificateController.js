@@ -5,6 +5,7 @@ const {
   SUCCESS_MESSAGES,
 } = require("../utils/constant/Messages");
 const logger = require("../utils/logger");
+const emptyListResponse = require("../utils/emptyListResponse");
 
 // Admin: Add certificate (PDF upload handled by middleware)
 exports.addCertificate = async (req, res, next) => {
@@ -55,8 +56,12 @@ exports.addCertificate = async (req, res, next) => {
 exports.getAllCertificates = async (req, res, next) => {
   try {
     const certs = await Certificate.find().sort({ createdAt: -1 });
-    if (!certs) {
-      return next(new AppError("Certificate not found"));
+    if (!certs || certs.length === 0) {
+      return emptyListResponse(
+        res,
+        ERROR_MESSAGES.CERTIFICATE_NOT_FOUND || "certificates not found.",
+        "certs"
+      );
     }
     res.status(200).json({
       success: true,

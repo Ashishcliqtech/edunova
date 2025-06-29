@@ -41,7 +41,7 @@ app.use(cookieParser());
 app.use((req, res, next) => {
   res.setHeader(
     "Access-Control-Expose-Headers",
-    "x-access-token, x-user-id, x-user-role"
+    "x-access-token, x-user-id, x-user-role, x-refresh-token"
   );
   next();
 });
@@ -105,10 +105,6 @@ app.use("/api/v1", certificateRoutes);
 app.use("/api/v1/", enquiryRoutes);
 app.use("/api/v1/", testimonialRoutes);
 app.use("/api/v1", adminRoutes);
-
-
-
-
 
 // Error handling middleware
 app.all("*", notFound);

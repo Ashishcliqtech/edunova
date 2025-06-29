@@ -42,6 +42,10 @@ const userSchema = new mongoose.Schema(
       type: String,
       select: false,
     },
+    refreshTokenExpires: {
+      type: Date,
+      select: false,
+    },
     isVerified: {
       type: Boolean,
       default: false,

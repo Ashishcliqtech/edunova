@@ -17,16 +17,7 @@ const verifyAccessToken = (token) => {
 };
 
 const sendTokenResponse = (user, refreshToken, statusCode, res) => {
-  const refreshTokenExpireDate = new Date(
-    Date.now() + config.REFRESH_TOKEN_EXPIRE_MS
-  );
-
-  res.cookie("refreshToken", refreshToken, {
-    expires: refreshTokenExpireDate,
-    httpOnly: true,
-    secure: config.NODE_ENV === "production",
-    sameSite: "strict",
-  });
+  res.setHeader("x-refresh-token", refreshToken);
 
   res.status(statusCode).json({
     success: true,

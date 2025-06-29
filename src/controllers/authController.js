@@ -47,7 +47,7 @@ const signup = catchAsync(async (req, res, next) => {
       );
     }
 
-    const redisData = { name, email, password, role: "user", otp };
+    const redisData = { name, email, password, otp };
     await redis.set(redisKey, JSON.stringify(redisData), { ex: 600 });
 
     // Send OTP via email
@@ -95,6 +95,7 @@ const verifyOtp = catchAsync(async (req, res, next) => {
 
     const accessToken = generateAccessToken(newUser._id, newUser.role);
     const refreshToken = generateRefreshToken();
+    newUser.refreshTokenExpires = Date.now() + config.REFRESH_TOKEN_EXPIRE_MS;
     await newUser.setRefreshToken(refreshToken);
     newUser.lastLogin = new Date();
     await newUser.save({ validateBeforeSave: false });
@@ -144,6 +145,7 @@ const login = catchAsync(async (req, res, next) => {
 
     const accessToken = generateAccessToken(user._id, user.role);
     const refreshToken = generateRefreshToken();
+    user.refreshTokenExpires = Date.now() + config.REFRESH_TOKEN_EXPIRE_MS;
     await user.setRefreshToken(refreshToken);
     user.lastLogin = new Date();
     await user.save({ validateBeforeSave: false });
@@ -196,20 +198,24 @@ const logout = catchAsync(async (req, res, next) => {
 });
 
 const refreshAccessToken = catchAsync(async (req, res, next) => {
-  const refreshToken = getRefreshTokenFromCookie(req);
+  const refreshToken = req.headers["x-refresh-token"];
 
   if (!refreshToken) {
     return next(
-      new AppError(
-        "No refresh token provided in cookies. Please log in again.",
-        401
-      )
+      new AppError("No refresh token provided. Please log in again.", 401)
     );
   }
 
   try {
-    const user = await User.findOne({ refreshToken }).select("+refreshToken");
-    if (!user || user.refreshToken !== refreshToken) {
+    const user = await User.findOne({ refreshToken }).select(
+      "+refreshToken +refreshTokenExpires"
+    );
+
+    if (
+      !user ||
+      user.refreshToken !== refreshToken ||
+      user.refreshTokenExpires < Date.now()
+    ) {
       return next(
         new AppError(
           "Invalid or expired refresh token. Please log in again.",
@@ -227,6 +233,7 @@ const refreshAccessToken = catchAsync(async (req, res, next) => {
     // Generate new tokens
     const newAccessToken = generateAccessToken(user._id, user.role);
     const newRefreshToken = generateRefreshToken();
+    user.refreshTokenExpires = Date.now() + config.REFRESH_TOKEN_EXPIRE_MS;
     await user.setRefreshToken(newRefreshToken);
     await user.save({ validateBeforeSave: false });
 

@@ -1,4 +1,5 @@
 const Testimonial = require("../models/Testimonial");
+const emptyListResponse = require("../utils/emptyListResponse");
 const { catchAsync, AppError } = require("../utils/errorUtils");
 const logger = require("../utils/logger");
 const successResponse = require("../utils/successResponse");
@@ -35,7 +36,7 @@ const getAllTestimonials = catchAsync(async (req, res, next) => {
     });
 
     if (!testimonials || testimonials.length === 0) {
-      return next(new AppError("No testimonials found", 404));
+      return emptyListResponse(res, "No testimonials found", "testimonials");
     }
 
     successResponse(res, 200, "Testimonials fetched successfully", {
@@ -81,7 +82,14 @@ const getAllTestimonialsAdmin = catchAsync(async (req, res, next) => {
     ]);
 
     if (!testimonials || testimonials.length === 0) {
-      return next(new AppError("No testimonials found", 404));
+      return emptyListResponse(res, "No testimonials found", "testimonials", {
+        pagination: {
+          totalTestimonials: 0,
+          totalPages: 1,
+          currentPage: page,
+          pageSize: limit,
+        },
+      });
     }
 
     successResponse(res, 200, "Testimonials fetched successfully", {

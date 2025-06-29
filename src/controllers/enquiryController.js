@@ -2,6 +2,7 @@ const Enquiry = require("../models/Enquiry");
 const { catchAsync, AppError } = require("../utils/errorUtils");
 const successResponse = require("../utils/successResponse");
 const logger = require("../utils/logger");
+const emptyListResponse = require("../utils/emptyListResponse");
 
 const createEnquiry = catchAsync(async (req, res, next) => {
   const { fullName, email, phone, message } = req.body;
@@ -62,7 +63,14 @@ const getAllEnquiry = catchAsync(async (req, res, next) => {
     ]);
 
     if (!enquiries || enquiries.length === 0) {
-      return next(new AppError("No enquiries found", 404));
+      return emptyListResponse(res, "No enquiries found", "enquiries", {
+        pagination: {
+          totalEnquiries: 0,
+          totalPages: 1,
+          currentPage: page,
+          pageSize: limit,
+        },
+      });
     }
 
     return successResponse(res, 200, "Enquiries fetched successfully", {

@@ -2,6 +2,7 @@ const { catchAsync, AppError } = require("../utils/errorUtils");
 const User = require("../models/User");
 const successResponse = require("../utils/successResponse");
 const logger = require("../utils/logger");
+const emptyListResponse = require("../utils/emptyListResponse");
 
 const getAllUsers = catchAsync(async (req, res, next) => {
   try {
@@ -33,7 +34,14 @@ const getAllUsers = catchAsync(async (req, res, next) => {
     }
 
     if (!users || users.length === 0) {
-      return next(new AppError("No users found", 404));
+      return emptyListResponse(res, "No users found", "users", {
+        pagination: {
+          totalUsers: 0,
+          totalPages: 1,
+          currentPage: page,
+          pageSize: limit,
+        },
+      });
     }
 
     successResponse(res, 200, "Users fetched successfully", {
