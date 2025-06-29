@@ -31,10 +31,12 @@ exports.createBlog = async (req, res, next) => {
 // Get all blog posts
 exports.getAllBlogs = async (req, res, next) => {
   try {
-    const blogs = await Blog.find({ isActive: true }).populate({
-      path: "createdBy",
-      select: "name email",
-    });
+    const blogs = await Blog.find({ isActive: true })
+      .sort({ createdAt: -1 })
+      .populate({
+        path: "createdBy",
+        select: "name email",
+      });
 
     if (!blogs || blogs.length === 0) {
       return emptyListResponse(res, "No blogs found", "blogs");
